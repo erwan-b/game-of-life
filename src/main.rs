@@ -1,7 +1,4 @@
-mod files;
-mod cell;
-mod graphic_lib;
-
+mod game_of_life;
 use clap::{Arg, App};
 
 
@@ -18,6 +15,8 @@ fn main() {
         .get_matches();
 
     let mapfile = matches.value_of("file").unwrap_or("input.txt");
+    println!("The file passed is: {}", mapfile);
 
-    println!("Hello, world!");
+    files::read_file();
+
 }
