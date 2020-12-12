@@ -1,5 +1,6 @@
 mod game_of_life;
 use clap::{Arg, App};
+use game_of_life::files;
 
 
 fn main() {
@@ -17,6 +18,5 @@ fn main() {
     let mapfile = matches.value_of("file").unwrap_or("input.txt");
     println!("The file passed is: {}", mapfile);
 
-    files::read_file();
-
+    files::read_file(mapfile);
 }

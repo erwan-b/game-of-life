@@ -1,5 +1,5 @@
-mod files;
-mod graphic_lib;
+pub mod files;
+pub mod graphic_lib;
 
 pub enum STATUS {
     ALIVE,
