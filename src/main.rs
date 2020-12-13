@@ -1,6 +1,13 @@
 mod game_of_life;
 use clap::{Arg, App};
 use game_of_life::files;
+use game_of_life::board::Board;
+
+fn infini_loop(board: Board) {
+    loop {
+
+    }
+}
 
 
 fn main() {
@@ -18,5 +25,5 @@ fn main() {
     let mapfile = matches.value_of("file").unwrap_or("input.txt");
     println!("The file passed is: {}", mapfile);
 
-    files::read_file(mapfile);
+    let board = files::read_file(mapfile);
 }

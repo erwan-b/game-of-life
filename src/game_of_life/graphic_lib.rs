@@ -1,5 +1,5 @@
-use crate::game_of_life::Cell;
+use crate::game_of_life::board::Board;
 
-pub fn init_game(board: &Vec<Cell>) {
+pub fn init_game(board: &Board) {
 
 }
