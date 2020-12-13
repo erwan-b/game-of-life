@@ -1,10 +1,14 @@
+
+#[derive(Clone)]
+#[derive(Copy)]
+#[derive(PartialEq)]
 pub enum STATUS {
-    ALIVE,
-    DEAD
+    DEAD = 0,
+    ALIVE = 1
 }
 
 pub struct Row {
-    cells: Vec<Cell>,
+    cells: Vec<Cell>
 }
 
 impl Row {
@@ -18,9 +22,9 @@ impl Row {
 }
 
 pub struct Cell {
-    x: usize,
-    y: usize,
-    status: STATUS
+    pub x: usize,
+    pub y: usize,
+    pub status: STATUS
 }
 
 impl Cell {

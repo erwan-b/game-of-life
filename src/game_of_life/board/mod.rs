@@ -47,6 +47,46 @@ impl Board {
             .get(y)
     }
 
-    pub fn apply_rules_on_pos(&mut self, pos: &Cell) {
+    fn get_adj_cells(&self, pos: &Cell) -> Vec<&Cell> {
+        vec![self.get(pos.x - 1, pos.y - 1),
+        self.get(pos.x - 1, pos.y),
+        self.get(pos.x - 1, pos.y + 1),
+
+        self.get(pos.x, pos.y - 1),
+        self.get(pos.x, pos.y + 1),
+
+        self.get(pos.x + 1, pos.y - 1),
+        self.get(pos.x + 1, pos.y),
+        self.get(pos.x + 1, pos.y + 1)]
     }
+
+    fn get_adj_cells_status(&self, pos: &Cell) -> Vec<STATUS> {
+        self.get_adj_cells(pos).iter()
+            .map(|&cell| cell.status)
+            .collect()
+    }
+
+    fn get_status_from_pos(&self, pos: &Cell) -> STATUS {
+        let adj_live_cells = self.get_adj_cells_status(pos).iter()
+            .filter(|&&elem| elem == STATUS::ALIVE).count();
+        if pos.status == STATUS::ALIVE {
+            if adj_live_cells > 3 || adj_live_cells < 2 {
+                STATUS::DEAD
+            } else {
+                STATUS::ALIVE
+            }
+        } else {
+            if adj_live_cells == 3 {
+                STATUS::ALIVE
+            } else {
+                STATUS::DEAD
+            }
+        }
+    }
+}
+
+pub fn apply_rules_on_board(board: &Board) -> Board{
+    let mut new_board: Board = Board::new();
+
+    new_board
 }

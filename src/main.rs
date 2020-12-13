@@ -1,11 +1,16 @@
 mod game_of_life;
 use clap::{Arg, App};
 use game_of_life::files;
-use game_of_life::board::Board;
+use game_of_life::board::{Board, apply_rules_on_board};
+use game_of_life::graphic_lib::init_game;
 
-fn infini_loop(board: Board) {
+fn infini_loop(board: &Board) {
+    let mut actual_board: &Board = board;
+    let mut new_board: Board;
+
     loop {
-
+       new_board = apply_rules_on_board(&actual_board);
+        actual_board = &new_board;
     }
 }
 
@@ -26,4 +31,6 @@ fn main() {
     println!("The file passed is: {}", mapfile);
 
     let board = files::read_file(mapfile);
+    init_game(&board);
+    infini_loop(&board);
 }
