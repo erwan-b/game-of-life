@@ -21,18 +21,17 @@ impl Board {
         }
     }
 
-    pub fn add_row(&mut self, line: &str, x: usize) -> &Self {
+    pub fn nb_row(&self) -> usize {
+        self.rows.len()
+    }
+
+    pub fn add_row(&mut self, line: &str) -> &Self {
         let mut y: usize = 0;
+        let x: usize = self.rows.len();
 
         let vec = line.chars()
             .map(|elem| {
-                let status = if elem == '0' {
-                   STATUS::DEAD
-                } else if elem == '1' {
-                     STATUS::ALIVE
-                } else {
-                    panic!("WRONG VALUE IN MAP")
-                };
+                let status = Board::cell_status(elem);
 
                 y += 1;
                 Cell::new(x, y, status)
@@ -42,22 +41,25 @@ impl Board {
         self
     }
 
-    pub fn get(&self, x: usize, y: usize) -> &Cell {
+    pub fn get_row(&self, x: usize) -> &Row {
         self.rows.get(x).unwrap()
-            .get(y)
+    }
+
+    pub fn get_cell(&self, x: usize, y: usize) -> &Cell {
+        self.rows.get(x).unwrap().get(y)
     }
 
     fn get_adj_cells(&self, pos: &Cell) -> Vec<&Cell> {
-        vec![self.get(pos.x - 1, pos.y - 1),
-        self.get(pos.x - 1, pos.y),
-        self.get(pos.x - 1, pos.y + 1),
+        vec![self.get_cell(pos.x - 1, pos.y - 1),
+        self.get_cell(pos.x - 1, pos.y),
+        self.get_cell(pos.x - 1, pos.y + 1),
 
-        self.get(pos.x, pos.y - 1),
-        self.get(pos.x, pos.y + 1),
+        self.get_cell(pos.x, pos.y - 1),
+        self.get_cell(pos.x, pos.y + 1),
 
-        self.get(pos.x + 1, pos.y - 1),
-        self.get(pos.x + 1, pos.y),
-        self.get(pos.x + 1, pos.y + 1)]
+        self.get_cell(pos.x + 1, pos.y - 1),
+        self.get_cell(pos.x + 1, pos.y),
+        self.get_cell(pos.x + 1, pos.y + 1)]
     }
 
     fn get_adj_cells_status(&self, pos: &Cell) -> Vec<STATUS> {
@@ -66,7 +68,7 @@ impl Board {
             .collect()
     }
 
-    fn get_status_from_pos(&self, pos: &Cell) -> STATUS {
+    fn next_status_from_pos(&self, pos: &Cell) -> STATUS {
         let adj_live_cells = self.get_adj_cells_status(pos).iter()
             .filter(|&&elem| elem == STATUS::ALIVE).count();
         if pos.status == STATUS::ALIVE {

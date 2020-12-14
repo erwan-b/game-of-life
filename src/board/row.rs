@@ -2,6 +2,7 @@
 #[derive(Clone)]
 #[derive(Copy)]
 #[derive(PartialEq)]
+#[derive(Debug)]
 pub enum STATUS {
     DEAD = 0,
     ALIVE = 1
@@ -18,6 +19,10 @@ impl Row {
 
     pub fn get(&self, index: usize) -> &Cell {
         self.cells.get(index).unwrap()
+    }
+
+    pub fn raw(&self) -> &Vec<Cell> {
+        &self.cells
     }
 }
 
