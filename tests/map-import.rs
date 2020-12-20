@@ -5,7 +5,7 @@ use game_of_life::board::row::STATUS;
 #[test]
 fn test_board_add_one_elem_row() {
     let mut b = Board::new();
-    b.add_row("0");
+    b.add_line("0");
 
     assert_eq!(b.get_cell(0, 0).status, STATUS::DEAD);
     assert_eq!(b.get_row(0).raw().len(), 1);
@@ -16,7 +16,7 @@ fn test_board_add_one_elem_row() {
 #[test]
 fn test_board_add_two_elem_row() {
     let mut b = Board::new();
-    b.add_row("01");
+    b.add_line("01");
 
     assert_eq!(b.get_cell(0, 0).status, STATUS::DEAD);
     assert_eq!(b.get_cell(0, 1).status, STATUS::ALIVE);
@@ -27,8 +27,8 @@ fn test_board_add_two_elem_row() {
 #[test]
 fn test_multipleboard_add_row() {
     let mut b = Board::new();
-    b.add_row("0000000000");
-    b.add_row("0000000000");
+    b.add_line("0000000000");
+    b.add_line("0000000000");
 
     assert_eq!(b.get_cell(0, 0).status, STATUS::DEAD);
     assert_eq!(b.get_row(0).raw().len(), 10);

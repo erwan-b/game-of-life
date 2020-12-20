@@ -8,24 +8,6 @@ pub enum STATUS {
     ALIVE = 1
 }
 
-pub struct Row {
-    cells: Vec<Cell>
-}
-
-impl Row {
-    pub fn new(row: Vec<Cell>) -> Self {
-        Row{cells: row}
-    }
-
-    pub fn get(&self, index: usize) -> &Cell {
-        self.cells.get(index).unwrap()
-    }
-
-    pub fn raw(&self) -> &Vec<Cell> {
-        &self.cells
-    }
-}
-
 pub struct Cell {
     pub x: usize,
     pub y: usize,

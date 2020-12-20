@@ -1,9 +1,10 @@
 pub mod row;
 
-use row::{Row, Cell, STATUS};
+use row::{Cell, STATUS};
+use ggez::graphics::apply_transformations;
 
 pub struct Board {
-    rows: Vec<Row>,
+    rows: Vec<Vec<Cell>>,
 }
 
 impl Board {
@@ -25,7 +26,13 @@ impl Board {
         self.rows.len()
     }
 
-    pub fn add_row(&mut self, line: &str) -> &Self {
+    pub fn add_row(&mut self, line: Vec<Cell>) -> &Self {
+        self.rows.push(line);
+
+        self
+    }
+
+    pub fn add_line(&mut self, line: &str) -> &Self {
         let mut y: usize = 0;
         let x: usize = self.rows.len();
 
@@ -36,17 +43,17 @@ impl Board {
                 y += 1;
                 Cell::new(x, y, status)
             }).collect::<Vec<Cell>>();
-        self.rows.push(Row::new(vec));
+        self.rows.push(vec);
 
         self
     }
 
-    pub fn get_row(&self, x: usize) -> &Row {
+    pub fn get_row(&self, x: usize) -> &Vec<Cell> {
         self.rows.get(x).unwrap()
     }
 
     pub fn get_cell(&self, x: usize, y: usize) -> &Cell {
-        self.rows.get(x).unwrap().get(y)
+        self.rows.get(x).unwrap().get(y).unwrap()
     }
 
     fn get_adj_cells(&self, pos: &Cell) -> Vec<&Cell> {
@@ -85,10 +92,23 @@ impl Board {
             }
         }
     }
-}
 
-pub fn apply_rules_on_board(board: &Board) -> Board{
-    let mut new_board: Board = Board::new();
+    fn apply_on_row(&self, row: &Vec<Cell>) -> Vec<Cell> {
+        row.iter()
+            .map(|cell| Cell::new(cell.x, cell.y, self.next_status_from_pos(cell)))
+            .collect()
+    }
 
-    new_board
+    fn apply_on_all(&self) -> Board {
+        let mut board = Board::new();
+
+        self.rows.iter()
+            .map(|row| self.apply_on_row(row))
+            .for_each(|elem| {
+                board.add_row(elem);
+            });
+
+
+        board
+    }
 }
