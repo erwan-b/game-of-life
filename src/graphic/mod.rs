@@ -1,22 +1,21 @@
 use ggez::{graphics, Context, ContextBuilder, GameResult};
-use ggez::event::{self, EventHandler};
+use ggez::event::{EventHandler};
 
 use crate::board::Board;
 
-pub struct MyGame {
-    // Your state here...
+pub struct MyGame<'a> {
+    board: &'a Board,
 }
 
-impl MyGame {
-    pub fn new(_ctx: &mut Context, board: &Board) -> MyGame {
-        // Load/create resources such as images here.
+impl<'a> MyGame<'a> {
+    pub fn new(_ctx: &mut Context, board: &'a Board) -> Self {
         MyGame {
-            // ...
+            board
         }
     }
 }
 
-impl EventHandler for MyGame {
+impl EventHandler for MyGame<'_> {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         // Update code here...
         Ok(())
