@@ -1,6 +1,7 @@
 /// This Constants object contain all values about the drawing
 /// - cell_size contain the nb of pixel for the call with a 1 zoom_ratio.
 ///     cell_size - border_size = real shown cell
+#[derive(Clone, Copy)]
 pub struct Constants {
     pub cell_size: f32,
     pub border_size: f32,

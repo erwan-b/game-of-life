@@ -1,12 +1,11 @@
 pub mod board;
-pub mod graphic;
+pub mod graphic_interface;
 
 use std::fs;
-use ggez::{graphics, Context, ContextBuilder, GameResult};
-use ggez::event::{self, EventHandler};
+use ggez::{ ContextBuilder, event };
 
 use board::{Board};
-use graphic::MyGame;
+use graphic_interface::MyGame;
 
 pub fn create_file_from_map(file_path: &str) -> Box<Board> {
     let c: Box<Board> = Box::new(Board::new());

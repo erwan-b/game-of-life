@@ -1,7 +1,7 @@
 pub mod cell;
 
 use cell::{Cell, STATUS};
-use ggez::graphics::apply_transformations;
+use crate::board::cell::STATUS::DEAD;
 
 pub struct Board {
     rows: Vec<Vec<Cell>>,
@@ -54,6 +54,16 @@ impl Board {
 
     pub fn get_cell(&self, x: usize, y: usize) -> &Cell {
         self.rows.get(x).unwrap().get(y).unwrap()
+    }
+
+    pub fn get_cell_status(&self, x: usize, y: usize) -> STATUS {
+        match self.rows.get(x) {
+            None => STATUS::DEAD,
+            Some(vector) => match vector.get(y) {
+                None => STATUS::DEAD,
+                Some(cell) => cell.status
+            }
+        }
     }
 
     fn get_adj_cells(&self, pos: &Cell) -> Vec<&Cell> {
