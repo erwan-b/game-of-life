@@ -1,6 +1,6 @@
-pub mod row;
+pub mod cell;
 
-use row::{Cell, STATUS};
+use cell::{Cell, STATUS};
 use ggez::graphics::apply_transformations;
 
 pub struct Board {
@@ -99,7 +99,7 @@ impl Board {
             .collect()
     }
 
-    fn apply_on_all(&self) -> Board {
+    pub fn apply_on_all(&self) -> Box<Board> {
         let mut board = Board::new();
 
         self.rows.iter()
@@ -109,6 +109,6 @@ impl Board {
             });
 
 
-        board
+        Box::new(board)
     }
 }

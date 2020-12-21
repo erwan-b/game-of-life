@@ -1,8 +1,4 @@
-
-#[derive(Clone)]
-#[derive(Copy)]
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum STATUS {
     DEAD = 0,
     ALIVE = 1

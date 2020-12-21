@@ -1,6 +1,6 @@
 use game_of_life as gl;
 use gl::board::Board;
-use game_of_life::board::row::STATUS;
+use game_of_life::board::cell::STATUS;
 
 #[test]
 fn test_board_add_one_elem_row() {

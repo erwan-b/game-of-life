@@ -8,17 +8,19 @@ use ggez::event::{self, EventHandler};
 use board::{Board};
 use graphic::MyGame;
 
-pub fn create_file_from_map(file_path: &str) -> Board {
+pub fn create_file_from_map(file_path: &str) -> Box<Board> {
+    let c: Box<Board> = Box::new(Board::new());
+
     fs::read_to_string(file_path)
         .expect("Something went wrong reading the file")
         .trim().lines()
-        .fold(Board::new(), |mut board, line| {
+        .fold(c, |mut board, line| {
             board.add_line(line);
             board
         })
 }
 
-fn run_game(board: &Board) {
+fn run_game(board: Box<Board>) {
     // Make a Context.
     let (mut ctx, mut event_loop) = ContextBuilder::new("my_game", "Cool Game Author")
         .build()
@@ -38,5 +40,6 @@ fn run_game(board: &Board) {
 
 pub fn load_run(mapfile: &str) {
     let board = create_file_from_map(mapfile);
-    run_game(&board);
+
+    run_game(board);
 }
