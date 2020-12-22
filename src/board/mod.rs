@@ -97,7 +97,7 @@ impl Board {
             STATUS::DEAD
         } else if pos.status == STATUS::ALIVE {
             STATUS::ALIVE
-        } else if adj_live_cells == 3 {
+        } else if pos.status == STATUS::DEAD && adj_live_cells == 3 {
             STATUS::ALIVE
         } else {
             STATUS::DEAD
