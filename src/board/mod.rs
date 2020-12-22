@@ -1,7 +1,6 @@
 pub mod cell;
 
 use cell::{Cell, STATUS};
-use crate::board::cell::STATUS::DEAD;
 
 pub struct Board {
     rows: Vec<Vec<Cell>>,
@@ -33,8 +32,8 @@ impl Board {
     }
 
     pub fn add_line(&mut self, line: &str) -> &Self {
-        let mut y: usize = 0;
-        let x: usize = self.rows.len();
+        let mut y: i32 = 0;
+        let x: i32 = self.rows.len() as i32;
 
         let vec = line.chars()
             .map(|elem| {
@@ -52,21 +51,27 @@ impl Board {
         self.rows.get(x).unwrap()
     }
 
-    pub fn get_cell(&self, x: usize, y: usize) -> &Cell {
-        self.rows.get(x).unwrap().get(y).unwrap()
+    pub fn get_cell(&self, x: i32, y: i32) -> Cell {
+        match self.rows.get(x as usize) {
+            None => Cell::new(x, 0, STATUS::DEAD),
+            Some(vec) => match vec.get(y as usize)  {
+                None => Cell::new(x, y, STATUS::DEAD),
+                Some(&cell) => cell
+            }
+        }
     }
 
-    pub fn get_cell_status(&self, x: usize, y: usize) -> STATUS {
-        match self.rows.get(x) {
+    pub fn get_cell_status(&self, x: i32, y: i32) -> STATUS {
+        match self.rows.get(x as usize) {
             None => STATUS::DEAD,
-            Some(vector) => match vector.get(y) {
+            Some(vector) => match vector.get(y as usize) {
                 None => STATUS::DEAD,
                 Some(cell) => cell.status
             }
         }
     }
 
-    fn get_adj_cells(&self, pos: &Cell) -> Vec<&Cell> {
+    fn get_adj_cells(&self, pos: &Cell) -> Vec<Cell> {
         vec![self.get_cell(pos.x - 1, pos.y - 1),
         self.get_cell(pos.x - 1, pos.y),
         self.get_cell(pos.x - 1, pos.y + 1),
@@ -81,25 +86,21 @@ impl Board {
 
     fn get_adj_cells_status(&self, pos: &Cell) -> Vec<STATUS> {
         self.get_adj_cells(pos).iter()
-            .map(|&cell| cell.status)
+            .map(|cell| cell.status)
             .collect()
     }
 
     fn next_status_from_pos(&self, pos: &Cell) -> STATUS {
         let adj_live_cells = self.get_adj_cells_status(pos).iter()
             .filter(|&&elem| elem == STATUS::ALIVE).count();
-        if pos.status == STATUS::ALIVE {
-            if adj_live_cells > 3 || adj_live_cells < 2 {
-                STATUS::DEAD
-            } else {
-                STATUS::ALIVE
-            }
+        if pos.status == STATUS::ALIVE && adj_live_cells > 3 || adj_live_cells < 2 {
+            STATUS::DEAD
+        } else if pos.status == STATUS::ALIVE {
+            STATUS::ALIVE
+        } else if adj_live_cells == 3 {
+            STATUS::ALIVE
         } else {
-            if adj_live_cells == 3 {
-                STATUS::ALIVE
-            } else {
-                STATUS::DEAD
-            }
+            STATUS::DEAD
         }
     }
 
@@ -112,8 +113,7 @@ impl Board {
     pub fn apply_on_all(&self) -> Box<Board> {
         let mut board = Board::new();
 
-        self.rows.iter()
-            .map(|row| self.apply_on_row(row))
+        self.rows.iter().map(|row| self.apply_on_row(row))
             .for_each(|elem| {
                 board.add_row(elem);
             });

@@ -1,14 +1,13 @@
 mod constants;
 
 use ggez::mint::Point2;
-use ggez::{graphics, Context, GameResult, timer};
+use ggez::{graphics, Context, GameResult};
 use ggez::event::{EventHandler};
 use ggez::event::MouseButton;
 
 use crate::board::Board;
 use crate::graphic_interface::constants::Constants;
-use std::time::Duration;
-use crate::board::cell::STATUS::ALIVE;
+use crate::board::cell::STATUS;
 
 /// `MyGame` describe the game graphic_interface logic
 pub struct MyGame {
@@ -56,6 +55,7 @@ impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         // Update code here...
 
+        self.board = self.board.apply_on_all();
         Ok(())
     }
 
@@ -64,26 +64,21 @@ impl EventHandler for MyGame {
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
 
-        let (h, w) = graphics::size(ctx);
-        let cell_h = (h / self.constants.cell_size) as usize;
-        let cell_w = (w / self.constants.cell_size) as usize;
-        println!("{}", cell_h);
-        println!("{}", cell_w);
-        println!("{}", h);
-        println!("{}", w);
+        let (w, h) = graphics::size(ctx);
+        let cell_h = (h / self.constants.cell_size) as i32;
+        let cell_w = (w / self.constants.cell_size) as i32;
+
 
         (0..cell_w).for_each(|x| {
             (0..cell_h).for_each(|y| {
                 let dest = Point2{x: (x as f32 * self.constants.cell_size) as f32, y: (y as f32 * self.constants.cell_size) as f32};
                 let bounds = graphics::DrawParam::default().dest(dest);
-                if self.board.get_cell_status(x, y) == ALIVE {
-                    graphics::draw(ctx, &self.cell_mesh, bounds);
+                if self.board.get_cell_status(x, y) == STATUS::ALIVE {
+                    let _res = graphics::draw(ctx, &self.cell_mesh, bounds);
                 }
             });
         });
 
-        // Draw code here...
-        timer::sleep(Duration::new(1, 0));
         graphics::present(ctx)
     }
 
