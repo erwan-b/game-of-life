@@ -31,16 +31,25 @@ impl Board {
         self
     }
 
+    pub fn get_line(&self, index: usize) -> String {
+       self.rows.get(index).unwrap()
+           .iter().map(|cell| if cell.status == STATUS::ALIVE {
+           '1'
+       } else {
+           '0'
+       }).collect()
+    }
+
     pub fn add_line(&mut self, line: &str) -> &Self {
-        let mut y: i32 = 0;
-        let x: i32 = self.rows.len() as i32;
+        let mut x: i32 = 0;
+        let y: i32 = self.rows.len() as i32;
 
         let vec = line.chars()
             .map(|elem| {
                 let status = Board::cell_status(elem);
 
-                y += 1;
-                Cell::new(x, y, status)
+                x += 1;
+                Cell::new(x - 1, y, status)
             }).collect::<Vec<Cell>>();
         self.rows.push(vec);
 
@@ -52,9 +61,9 @@ impl Board {
     }
 
     pub fn get_cell(&self, x: i32, y: i32) -> Cell {
-        match self.rows.get(x as usize) {
-            None => Cell::new(x, 0, STATUS::DEAD),
-            Some(vec) => match vec.get(y as usize)  {
+        match self.rows.get(y as usize) {
+            None => Cell::new(y, 0, STATUS::DEAD),
+            Some(vec) => match vec.get(x as usize)  {
                 None => Cell::new(x, y, STATUS::DEAD),
                 Some(&cell) => cell
             }
@@ -62,9 +71,9 @@ impl Board {
     }
 
     pub fn get_cell_status(&self, x: i32, y: i32) -> STATUS {
-        match self.rows.get(x as usize) {
+        match self.rows.get(y as usize) {
             None => STATUS::DEAD,
-            Some(vector) => match vector.get(y as usize) {
+            Some(vector) => match vector.get(x as usize) {
                 None => STATUS::DEAD,
                 Some(cell) => cell.status
             }
@@ -85,14 +94,24 @@ impl Board {
     }
 
     fn get_adj_cells_status(&self, pos: &Cell) -> Vec<STATUS> {
-        self.get_adj_cells(pos).iter()
-            .map(|cell| cell.status)
-            .collect()
+        vec![self.get_cell_status(pos.x - 1, pos.y - 1),
+             self.get_cell_status(pos.x    , pos.y - 1),
+             self.get_cell_status(pos.x + 1, pos.y - 1),
+
+             self.get_cell_status(pos.x - 1, pos.y),
+             self.get_cell_status(pos.x + 1, pos.y),
+
+             self.get_cell_status(pos.x - 1, pos.y  + 1),
+             self.get_cell_status(pos.x    , pos.y  + 1),
+             self.get_cell_status(pos.x + 1, pos.y  + 1)]
     }
 
     fn next_status_from_pos(&self, pos: &Cell) -> STATUS {
         let adj_live_cells = self.get_adj_cells_status(pos).iter()
             .filter(|&&elem| elem == STATUS::ALIVE).count();
+
+        println!("x: {}, y: {}", pos.x, pos.y);
+        println!("{}", adj_live_cells);
         if pos.status == STATUS::ALIVE && adj_live_cells > 3 || adj_live_cells < 2 {
             STATUS::DEAD
         } else if pos.status == STATUS::ALIVE {
@@ -105,18 +124,22 @@ impl Board {
     }
 
     fn apply_on_row(&self, row: &Vec<Cell>) -> Vec<Cell> {
+        println!("-----");
         row.iter()
-            .map(|cell| Cell::new(cell.x, cell.y, self.next_status_from_pos(cell)))
-            .collect()
+            .fold(vec![], |mut acc, cell| {
+                acc.push(
+                    Cell::new(cell.x, cell.y, self.next_status_from_pos(cell))
+                );
+                acc
+            })
     }
 
     pub fn apply_on_all(&self) -> Box<Board> {
         let mut board = Board::new();
 
-        self.rows.iter().map(|row| self.apply_on_row(row))
-            .for_each(|elem| {
-                board.add_row(elem);
-            });
+        self.rows.iter().for_each(|row| {
+            board.add_row(self.apply_on_row(row));
+        });
 
 
         Box::new(board)

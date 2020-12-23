@@ -1,3 +1,4 @@
+use std::time;
 mod constants;
 
 use ggez::mint::Point2;
@@ -11,6 +12,7 @@ use crate::board::cell::STATUS;
 
 /// `MyGame` describe the game graphic_interface logic
 pub struct MyGame {
+    last_refresh : time::Instant,
     board: Box<Board>,
     cell_mesh: graphics::Mesh,
     constants: Constants,
@@ -37,6 +39,7 @@ impl MyGame {
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
         let c = Constants::new(15.0, 4.0, 1.0);
         MyGame {
+            last_refresh: time::Instant::now(),
             board,
             cell_mesh: MyGame::create_mesh(ctx, c),
             constants: c,
@@ -53,9 +56,18 @@ impl EventHandler for MyGame {
     /// Update the cells there.
     /// There for we call the board function that return a new one with the rules applied on all cells.
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        // Update code here...
+        let duration = time::Instant::now() - self.last_refresh;
 
-        self.board = self.board.apply_on_all();
+        if  duration.as_secs() > 1 {
+            println!("{}", self.board.get_line(0));
+            println!("{}", self.board.get_line(1));
+            println!("{}", self.board.get_line(2));
+            self.last_refresh = time::Instant::now();
+            self.board = self.board.apply_on_all();
+            println!("{}", self.board.get_line(0));
+            println!("{}", self.board.get_line(1));
+            println!("--------");
+        }
         Ok(())
     }
 
@@ -69,8 +81,8 @@ impl EventHandler for MyGame {
         let cell_w = (w / self.constants.cell_size) as i32;
 
 
-        (0..cell_w).for_each(|x| {
-            (0..cell_h).for_each(|y| {
+        (0..cell_w).for_each(|y| {
+            (0..cell_h).for_each(|x| {
                 let dest = Point2{x: (x as f32 * self.constants.cell_size) as f32, y: (y as f32 * self.constants.cell_size) as f32};
                 let bounds = graphics::DrawParam::default().dest(dest);
                 if self.board.get_cell_status(x, y) == STATUS::ALIVE {
