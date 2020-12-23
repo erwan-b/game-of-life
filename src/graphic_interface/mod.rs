@@ -48,6 +48,9 @@ impl MyGame {
 
     pub fn next(&mut self) {
         self.board.apply_on_all();
+
+        println!("{}", self.board.get_line(0));
+        println!("{}", self.board.get_line(1));
     }
 }
 
