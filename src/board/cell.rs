@@ -4,6 +4,27 @@ pub enum STATUS {
     ALIVE = 1
 }
 
+impl STATUS {
+    pub fn get_char(self) -> char {
+        if STATUS::DEAD == self {
+            '0'
+        } else {
+            '1'
+        }
+
+    }
+
+    pub fn get_from_char(status: char) -> STATUS {
+        if status == '0' {
+            STATUS::DEAD
+        } else if status == '1' {
+            STATUS::ALIVE
+        } else {
+            panic!("Wrong format")
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct Cell {
     pub x: i32,

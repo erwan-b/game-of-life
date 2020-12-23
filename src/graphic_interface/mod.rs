@@ -47,7 +47,7 @@ impl MyGame {
     }
 
     pub fn next(&mut self) {
-            self.board = self.board.apply_on_all();
+        self.board.apply_on_all();
     }
 }
 
@@ -59,14 +59,8 @@ impl EventHandler for MyGame {
         let duration = time::Instant::now() - self.last_refresh;
 
         if  duration.as_secs() > 1 {
-            println!("{}", self.board.get_line(0));
-            println!("{}", self.board.get_line(1));
-            println!("{}", self.board.get_line(2));
             self.last_refresh = time::Instant::now();
-            self.board = self.board.apply_on_all();
-            println!("{}", self.board.get_line(0));
-            println!("{}", self.board.get_line(1));
-            println!("--------");
+            self.next()
         }
         Ok(())
     }
