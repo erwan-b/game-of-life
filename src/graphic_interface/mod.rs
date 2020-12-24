@@ -141,7 +141,7 @@ impl EventHandler for MyGame {
     ) { }
 
     /// Called when the user resizes the window, or when it is resized
-    fn resize_event(&mut self, ctx: &mut Context, w: f32, h: f32) {
+    fn resize_event(&mut self, ctx: &mut Context, _w: f32, _h: f32) {
         let (h_l, w_l) = MyGame::create_line_mesh(ctx);
         self.h_l = h_l;
         self.w_l = w_l;

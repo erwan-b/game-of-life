@@ -16,9 +16,10 @@ pub fn create_file_from_map(file_path: &str) -> Box<Board> {
 
 /// Run the ggez window
 fn run_game(board: Box<Board>) {
-    let mut c: conf::Conf = conf::Conf::default();
-    c.window_setup.title = "game of life".parse().unwrap();
-    c.window_mode.resizable = true;
+    let mut c: conf::Conf = conf::Conf::new();
+
+    c.window_setup = c.window_setup.title(&"game of life");
+    c.window_mode = c.window_mode.resizable(true);
 
     let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
         .conf(c)

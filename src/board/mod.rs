@@ -71,6 +71,7 @@ impl Board {
     }
 
     /// Get all adjacent cells status
+    /// There for we make a square around the original cell
     fn get_adj_cells(&self, pos: &Cell) -> Vec<Cell> {
         vec![self.get_cell_or_dead(pos.x - 1, pos.y - 1),
              self.get_cell_or_dead(pos.x    , pos.y - 1),
