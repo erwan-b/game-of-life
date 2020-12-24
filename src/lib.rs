@@ -2,7 +2,7 @@ pub mod board;
 pub mod graphic_interface;
 
 use std::fs;
-use ggez::{ ContextBuilder, event };
+use ggez::{ ContextBuilder, event, conf };
 
 use board::{Board};
 use graphic_interface::MyGame;
@@ -11,18 +11,20 @@ pub fn create_file_from_map(file_path: &str) -> Box<Board> {
     let lines = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
 
-    Box::new(Board::new(10, lines.trim().lines().collect()))
+    Box::new(Board::new(500, lines.trim().lines().collect()))
 }
 
+/// Run the ggez window
 fn run_game(board: Box<Board>) {
-    // Make a Context.
-    let (mut ctx, mut event_loop) = ContextBuilder::new("my_game", "Cool Game Author")
+    let mut c: conf::Conf = conf::Conf::default();
+    c.window_setup.title = "game of life".parse().unwrap();
+    c.window_mode.resizable = true;
+
+    let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
+        .conf(c)
         .build()
         .expect("aieee, could not create ggez context!");
 
-    // Create an instance of your event handler.
-    // Usually, you should provide it with the Context object to
-    // use when setting your game up.
     let mut my_game = MyGame::new(&mut ctx, board);
 
     // Run!
