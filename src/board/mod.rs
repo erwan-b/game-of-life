@@ -44,19 +44,6 @@ impl Board {
         Board{default_size: size, rows}
     }
 
-    /// Apply the game of life rules
-    fn apply_rules(cell: &Cell, adj_live_cells: usize) -> STATUS {
-        if cell.is_alive() && adj_live_cells > 3 || adj_live_cells < 2 {
-            STATUS::DEAD
-        } else if cell.is_alive() {
-            STATUS::ALIVE
-        } else if !cell.is_alive() && adj_live_cells == 3 {
-            STATUS::ALIVE
-        } else {
-            STATUS::DEAD
-        }
-    }
-
     pub fn nb_row(&self) -> usize {
         self.rows.len()
     }
@@ -99,7 +86,7 @@ impl Board {
 
     /// Apply the game of life rules on a certain position on the board
     fn apply_on_pos(&self, cell: &Cell) -> Cell {
-        let adj_live_cells = self.get_adj_cells(pos).iter().filter(|&&elem| elem.is_alive()).count();
+        let adj_live_cells = self.get_adj_cells(cell).iter().filter(|&&elem| elem.is_alive()).count();
         cell.apply_rules(adj_live_cells)
     }
 

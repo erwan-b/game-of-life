@@ -34,7 +34,6 @@ impl MyGame {
         cell_mesh
     }
 
-
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
         let c = Constants::new(16.0, 4.0, 1.0);
         MyGame {
@@ -62,46 +61,32 @@ impl MyGame {
                 if self.board.get_cell_or_dead(
                     (x as f32 / self.constants.cell_size) as i32,
                     (y as f32 / self.constants.cell_size) as i32).is_alive() {
-                    graphics::draw(
-                        ctx,
-                        &self.cell_mesh,
-                        graphics::DrawParam::default().dest(dest)
-                    )?
+                    graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(dest))
+                } else {
+                    Ok(())
                 }
-                Ok(())
-            })?;
-            Ok(())
-        })?;
-
-        Ok(())
+            })
+        })
     }
 
     fn draw_grid(&self, ctx: &mut Context, w: f32, h: f32) -> GameResult<()> {
         let color = [0.3, 0.3, 0.3, 1.0].into();
-        for p in (0..w as i32).step_by((self.constants.cell_size / 2.0) as usize) {
+
+        (0..w as i32).step_by((self.constants.cell_size / 2.0) as usize)
+            .fold(Ok(()), | _acc, p| {
             let l = graphics::Mesh::new_line(
-                ctx,
-                &[
-                    Point2{ x: 0.0, y: p as f32},
-                    Point2{ x: w, y: p as f32},
-                ],
+                ctx, &[ Point2{ x: 0.0, y: p as f32}, Point2{ x: w, y: p as f32} ],
                 1.0,
                 color,
             )?;
             let c = graphics::Mesh::new_line(
-                ctx,
-                &[
-                    Point2{x: p as f32, y: 0.0},
-                    Point2{x: p as f32, y: h},
-                ],
+                ctx, &[ Point2{x: p as f32, y: 0.0}, Point2{x: p as f32, y: h} ],
                 1.0,
                 color,
             )?;
             graphics::draw(ctx, &l, (Point2{x: 0.0, y: p as f32},))?;
-            graphics::draw(ctx, &c, (Point2{x: p as f32, y: 0.0},))?;
-        }
-
-        Ok(())
+            graphics::draw(ctx, &c, (Point2{x: p as f32, y: 0.0},))
+        })
     }
 }
 

@@ -15,21 +15,14 @@ impl STATUS {
         } else {
             '1'
         }
-
     }
 
     pub fn get_from_char(s: char) -> STATUS {
-        if s == '0' {
-            STATUS::DEAD
-        } else if s == '1' {
-            STATUS::ALIVE
-        } else {
-            panic!("Wrong format")
+        match s {
+            '0' => STATUS::DEAD,
+            '1' => STATUS::ALIVE,
+            _other => panic!("Wrong format")
         }
-    }
-
-    pub fn is_alive(&self) -> bool {
-       *self == STATUS::ALIVE
     }
 }
 
@@ -47,6 +40,7 @@ impl Cell {
         Cell{x, y, status}
     }
 
+    /// Is this cell alive
     pub fn is_alive(&self) -> bool {
         self.status == STATUS::ALIVE
     }
