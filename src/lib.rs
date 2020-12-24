@@ -8,15 +8,10 @@ use board::{Board};
 use graphic_interface::MyGame;
 
 pub fn create_file_from_map(file_path: &str) -> Box<Board> {
-    let c: Box<Board> = Box::new(Board::new());
+    let lines = fs::read_to_string(file_path)
+        .expect("Something went wrong reading the file");
 
-    fs::read_to_string(file_path)
-        .expect("Something went wrong reading the file")
-        .trim().lines()
-        .fold(c, |mut board, line| {
-            board.add_line(line);
-            board
-        })
+    Box::new(Board::new(10, lines.trim().lines().collect()))
 }
 
 fn run_game(board: Box<Board>) {

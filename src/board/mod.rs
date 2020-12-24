@@ -3,33 +3,53 @@ pub mod cell;
 use cell::{Cell, STATUS};
 
 pub struct Board {
+    default_size: usize,
     rows: Vec<Vec<Cell>>,
 }
 
 /// Define the board logic
 impl Board {
     /// Construct an empty board
-    pub fn new() -> Self {
-        let mut rows = vec![vec![]; 10];
-
-        rows = rows.iter().enumerate().map(|(index, elem)| {
-            let mut line: Vec<Cell> = Vec::with_capacity(10);
-            for i in 0..10 {
-                line.push(Cell::new(index as i32, i, STATUS::DEAD))
+    pub fn new(size: usize, obj: Vec<&str>) -> Self {
+        let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
+        let get_status = |x: i64, y: i64| -> Option<STATUS> {
+            if x <= 0 && y <= 0 {
+                None
+            } else {
+                let &c = obj_b.get(y as usize)?.get(x as usize)?;
+                Some(STATUS::get_from_char(c))
             }
-            line
-        }).collect();
+        };
 
-        Board{rows}
+        let mut rows = Vec::with_capacity(size);
+
+        (0..size as i64).for_each(|y| {
+            let mut line: Vec<Cell> = Vec::with_capacity(size);
+
+            (0..size as i64).for_each(|x| {
+                let res = match get_status(
+                    ((size / 2) - (obj.len() / 2)) as i64 - x,
+                    ((size / 2) - (obj.len() / 2)) as i64 - y
+                ) {
+                    None => STATUS::DEAD,
+                    Some(status) => status
+                };
+                line.push(Cell::new(x as i32, y as i32, res))
+            });
+
+            rows.push(line);
+        });
+
+        Board{default_size: size, rows}
     }
 
     /// Apply the game of life rules
-    fn apply_rules(status: STATUS, adj_live_cells: usize) -> STATUS {
-        if status == STATUS::ALIVE && adj_live_cells > 3 || adj_live_cells < 2 {
+    fn apply_rules(cell: &Cell, adj_live_cells: usize) -> STATUS {
+        if cell.is_alive() && adj_live_cells > 3 || adj_live_cells < 2 {
             STATUS::DEAD
-        } else if status == STATUS::ALIVE {
+        } else if cell.is_alive() {
             STATUS::ALIVE
-        } else if status == STATUS::DEAD && adj_live_cells == 3 {
+        } else if !cell.is_alive() && adj_live_cells == 3 {
             STATUS::ALIVE
         } else {
             STATUS::DEAD
@@ -45,15 +65,6 @@ impl Board {
             .map(|cell| cell.status.get_char()).collect()
     }
 
-    pub fn add_line(&mut self, line: &str) {
-        let y = self.nb_row() as i32;
-
-        let vec = line.chars().enumerate().map(|(x, elem)| {
-                Cell::new(x as i32, y, STATUS::get_from_char(elem))
-            }).collect::<Vec<Cell>>();
-        self.rows.push(vec);
-    }
-
     pub fn get_row(&self, x: usize) -> &Vec<Cell> {
         self.rows.get(x).unwrap()
     }
@@ -63,33 +74,32 @@ impl Board {
         self.rows.get(y as usize)?.get(x as usize)
     }
 
-    /// Get status for a specific position on the board
-    pub fn get_cell_status(&self, x: i32, y: i32) -> STATUS {
+    /// Get cell from a specific position on the board
+    pub fn get_cell_or_dead(&self, x: i32, y: i32) -> Cell {
         match self.get_cell(x, y) {
-            None => STATUS::DEAD,
-            Some(&cell) => cell.status
+            None => Cell::new(0, 0, STATUS::DEAD),
+            Some(&cell) => cell
         }
     }
 
     /// Get all adjacent cells status
-    fn get_adj_cells_status(&self, pos: &Cell) -> Vec<STATUS> {
-        vec![self.get_cell_status(pos.x - 1, pos.y - 1),
-             self.get_cell_status(pos.x    , pos.y - 1),
-             self.get_cell_status(pos.x + 1, pos.y - 1),
+    fn get_adj_cells(&self, pos: &Cell) -> Vec<Cell> {
+        vec![self.get_cell_or_dead(pos.x - 1, pos.y - 1),
+             self.get_cell_or_dead(pos.x    , pos.y - 1),
+             self.get_cell_or_dead(pos.x + 1, pos.y - 1),
 
-             self.get_cell_status(pos.x - 1, pos.y),
-             self.get_cell_status(pos.x + 1, pos.y),
+             self.get_cell_or_dead(pos.x - 1, pos.y),
+             self.get_cell_or_dead(pos.x + 1, pos.y),
 
-             self.get_cell_status(pos.x - 1, pos.y  + 1),
-             self.get_cell_status(pos.x    , pos.y  + 1),
-             self.get_cell_status(pos.x + 1, pos.y  + 1)]
+             self.get_cell_or_dead(pos.x - 1, pos.y  + 1),
+             self.get_cell_or_dead(pos.x    , pos.y  + 1),
+             self.get_cell_or_dead(pos.x + 1, pos.y  + 1)]
     }
 
     /// Apply the game of life rules on a certain position on the board
     fn apply_on_pos(&self, pos: &Cell) -> STATUS {
-        let adj_live_cells = self.get_adj_cells_status(pos).iter()
-            .filter(|&&elem| elem == STATUS::ALIVE).count();
-        Board::apply_rules(pos.status, adj_live_cells)
+        let adj_live_cells = self.get_adj_cells(pos).iter().filter(|&&elem| elem.is_alive()).count();
+        Board::apply_rules(pos, adj_live_cells)
     }
 
     /// Apply the game of life rules on a row of the board

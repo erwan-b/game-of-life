@@ -5,8 +5,8 @@ pub enum STATUS {
 }
 
 impl STATUS {
-    pub fn get_char(self) -> char {
-        if STATUS::DEAD == self {
+    pub fn get_char(&self) -> char {
+        if STATUS::DEAD == *self {
             '0'
         } else {
             '1'
@@ -14,14 +14,18 @@ impl STATUS {
 
     }
 
-    pub fn get_from_char(status: char) -> STATUS {
-        if status == '0' {
+    pub fn get_from_char(s: char) -> STATUS {
+        if s == '0' {
             STATUS::DEAD
-        } else if status == '1' {
+        } else if s == '1' {
             STATUS::ALIVE
         } else {
             panic!("Wrong format")
         }
+    }
+
+    pub fn is_alive(&self) -> bool {
+       *self == STATUS::ALIVE
     }
 }
 
@@ -35,5 +39,9 @@ pub struct Cell {
 impl Cell {
     pub fn new(x: i32, y: i32, status: STATUS) -> Self {
         Cell{x, y, status}
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.status == STATUS::ALIVE
     }
 }

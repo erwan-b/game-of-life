@@ -8,7 +8,6 @@ use ggez::event::MouseButton;
 
 use crate::board::Board;
 use crate::graphic_interface::constants::Constants;
-use crate::board::cell::STATUS;
 
 /// `MyGame` describe the game graphic_interface logic
 pub struct MyGame {
@@ -21,7 +20,7 @@ pub struct MyGame {
 /// The impl is here to define our graphic_interface logic called by the `EventHandler`
 /// It important to kipp it split from the the rest
 impl MyGame {
-    pub fn create_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
+    fn create_cell_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
         let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, constants.cell_size, constants.cell_size);
         let cell_mesh = match graphics::Mesh::new_rectangle(
             ctx,
@@ -37,20 +36,72 @@ impl MyGame {
 
 
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
-        let c = Constants::new(15.0, 4.0, 1.0);
+        let c = Constants::new(16.0, 4.0, 1.0);
         MyGame {
             last_refresh: time::Instant::now(),
             board,
-            cell_mesh: MyGame::create_mesh(ctx, c),
+            cell_mesh: MyGame::create_cell_mesh(ctx, c),
             constants: c,
         }
     }
 
     pub fn next(&mut self) {
         self.board.apply_on_all();
+    }
 
-        println!("{}", self.board.get_line(0));
-        println!("{}", self.board.get_line(1));
+    fn draw_board(&self, ctx: &mut Context, w: f32, h: f32) -> GameResult<()> {
+        let step = self.constants.cell_size as usize;
+
+        (0..w as usize).step_by(step).fold(Ok(()), |_acc, y| -> GameResult<()>  {
+            (0..h as usize).step_by(step).fold(Ok(()), |_acc, x| -> GameResult<()>  {
+                let dest = Point2 {
+                    x: x as f32,
+                    y: y as f32
+                };
+
+                if self.board.get_cell_or_dead(
+                    (x as f32 / self.constants.cell_size) as i32,
+                    (y as f32 / self.constants.cell_size) as i32).is_alive() {
+                    graphics::draw(
+                        ctx,
+                        &self.cell_mesh,
+                        graphics::DrawParam::default().dest(dest)
+                    )?
+                }
+                Ok(())
+            })?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn draw_grid(&self, ctx: &mut Context, w: f32, h: f32) -> GameResult<()> {
+        let color = [0.3, 0.3, 0.3, 1.0].into();
+        for p in (0..w as i32).step_by((self.constants.cell_size / 2.0) as usize) {
+            let l = graphics::Mesh::new_line(
+                ctx,
+                &[
+                    Point2{ x: 0.0, y: p as f32},
+                    Point2{ x: w, y: p as f32},
+                ],
+                1.0,
+                color,
+            )?;
+            let c = graphics::Mesh::new_line(
+                ctx,
+                &[
+                    Point2{x: p as f32, y: 0.0},
+                    Point2{x: p as f32, y: h},
+                ],
+                1.0,
+                color,
+            )?;
+            graphics::draw(ctx, &l, (Point2{x: 0.0, y: p as f32},))?;
+            graphics::draw(ctx, &c, (Point2{x: p as f32, y: 0.0},))?;
+        }
+
+        Ok(())
     }
 }
 
@@ -74,19 +125,8 @@ impl EventHandler for MyGame {
         graphics::clear(ctx, graphics::WHITE);
 
         let (w, h) = graphics::size(ctx);
-        let cell_h = (h / self.constants.cell_size) as i32;
-        let cell_w = (w / self.constants.cell_size) as i32;
-
-
-        (0..cell_w).for_each(|y| {
-            (0..cell_h).for_each(|x| {
-                let dest = Point2{x: (x as f32 * self.constants.cell_size) as f32, y: (y as f32 * self.constants.cell_size) as f32};
-                let bounds = graphics::DrawParam::default().dest(dest);
-                if self.board.get_cell_status(x, y) == STATUS::ALIVE {
-                    let _res = graphics::draw(ctx, &self.cell_mesh, bounds);
-                }
-            });
-        });
+        self.draw_board(ctx, w, h)?;
+        self.draw_grid(ctx, w, h)?;
 
         graphics::present(ctx)
     }
