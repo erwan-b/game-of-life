@@ -1,3 +1,7 @@
+
+/// Define a cell alive or dead
+/// This should not be access by something else than the cell
+/// [TODO] Remove the pub
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum STATUS {
     DEAD = 0,
@@ -29,6 +33,8 @@ impl STATUS {
     }
 }
 
+/// Define a cell of the board
+/// It has a position on it and a status
 #[derive(Clone, Copy)]
 pub struct Cell {
     pub x: i32,
@@ -43,5 +49,18 @@ impl Cell {
 
     pub fn is_alive(&self) -> bool {
         self.status == STATUS::ALIVE
+    }
+
+    /// Apply the game of life rules on this cell
+    pub fn apply_rules(&self, adj_live_cells: usize) -> Cell {
+        if self.is_alive() && adj_live_cells > 3 || adj_live_cells < 2 {
+            Cell::new(self.x, self.y, STATUS::DEAD)
+        } else if self.is_alive() {
+            Cell::new(self.x, self.y, STATUS::ALIVE)
+        } else if !self.is_alive() && adj_live_cells == 3 {
+            Cell::new(self.x, self.y, STATUS::ALIVE)
+        } else {
+            Cell::new(self.x, self.y, STATUS::DEAD)
+        }
     }
 }

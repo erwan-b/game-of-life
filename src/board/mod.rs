@@ -10,6 +10,7 @@ pub struct Board {
 /// Define the board logic
 impl Board {
     /// Construct an empty board
+    /// [TODO] make this more readable
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
         let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
         let get_status = |x: i64, y: i64| -> Option<STATUS> {
@@ -97,15 +98,15 @@ impl Board {
     }
 
     /// Apply the game of life rules on a certain position on the board
-    fn apply_on_pos(&self, pos: &Cell) -> STATUS {
+    fn apply_on_pos(&self, cell: &Cell) -> Cell {
         let adj_live_cells = self.get_adj_cells(pos).iter().filter(|&&elem| elem.is_alive()).count();
-        Board::apply_rules(pos, adj_live_cells)
+        cell.apply_rules(adj_live_cells)
     }
 
     /// Apply the game of life rules on a row of the board
     fn apply_on_row(&self, row: &Vec<Cell>) -> Vec<Cell> {
         row.iter().map(|cell|
-            Cell::new(cell.x, cell.y, self.apply_on_pos(cell))
+            self.apply_on_pos(cell)
         ).collect()
     }
 
