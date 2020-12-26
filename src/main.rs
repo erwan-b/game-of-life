@@ -9,7 +9,7 @@ fn main() {
         .arg(Arg::with_name("file")
             .alias("file")
             .takes_value(true)
-            .help("config file for the board ")
+            .help("config file for the board")
         )
         .get_matches();
 

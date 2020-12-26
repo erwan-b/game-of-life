@@ -1,5 +1,6 @@
 use std::time;
 mod constants;
+mod camera;
 
 use ggez::mint::Point2;
 use ggez::{graphics, Context, GameResult};
@@ -8,14 +9,18 @@ use ggez::event::MouseButton;
 
 use crate::board::Board;
 use crate::graphic_interface::constants::Constants;
+use crate::graphic_interface::camera::Camera;
 
 /// `MyGame` describe the game graphic_interface logic
 pub struct MyGame {
-    last_refresh : time::Instant,
     board: Box<Board>,
+    camera: Camera,
+
     cell_mesh: graphics::Mesh,
-    h_l: graphics::Mesh,
-    w_l: graphics::Mesh,
+    line_h: graphics::Mesh,
+    line_w: graphics::Mesh,
+
+    last_refresh : time::Instant,
     constants: Constants,
 }
 
@@ -27,18 +32,18 @@ impl MyGame {
         let (w, h) = graphics::size(ctx);
 
 
-        let h_l = graphics::Mesh::new_line(
+        let line_h = graphics::Mesh::neline_wine(
             ctx, &[ Point2{ x: 0.0, y: 0.0 as f32}, Point2{ x: w, y: 0.0 } ],
             1.0,
             color,
         ).unwrap();
 
-        let w_l = graphics::Mesh::new_line(
+        let line_w = graphics::Mesh::neline_wine(
             ctx, &[ Point2{x: 0.0 as f32, y: 0.0}, Point2{x: 0.0, y: h} ],
             1.0,
             color,
         ).unwrap();
-        (h_l, w_l)
+        (line_h, line_w)
     }
 
     fn create_cell_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
@@ -57,15 +62,16 @@ impl MyGame {
 
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
         let constants = Constants::new(16.0, 4.0, 1.0);
-        let (h_l, w_l) = MyGame::create_line_mesh(ctx);
+        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
 
         MyGame {
             last_refresh: time::Instant::now(),
             board,
             cell_mesh: MyGame::create_cell_mesh(ctx, constants),
-            h_l,
-            w_l,
+            line_h,
+            line_w,
             constants,
+            camera: Camera::new()
         }
     }
 
@@ -73,23 +79,24 @@ impl MyGame {
         self.board.apply_on_all();
     }
 
-    fn draw_board(&self, ctx: &mut Context, w: f32, h: f32) -> GameResult<()> {
+    fn draw_cell(&self, ctx: &mut Context, alive: bool,  x: usize, y: usize) -> GameResult<()> {
+        if alive {
+            graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
+                x: x as f32,
+                y: y as f32
+            }))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn draw_board(&self, ctx: &mut Context, screen_width: f32, screen_height: f32) -> GameResult<()> {
         let step = self.constants.cell_size as usize;
 
-        (0..w as usize).step_by(step).fold(Ok(()), |_acc, y| -> GameResult<()>  {
-            (0..h as usize).step_by(step).fold(Ok(()), |_acc, x| -> GameResult<()>  {
-                let dest = Point2 {
-                    x: x as f32,
-                    y: y as f32
-                };
-
-                if self.board.get_cell_or_dead(
-                    (x as f32 / self.constants.cell_size) as i32,
-                    (y as f32 / self.constants.cell_size) as i32).is_alive() {
-                    graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(dest))
-                } else {
-                    Ok(())
-                }
+        (0..screen_width as usize).step_by(step).fold(Ok(()), |_acc, y| -> GameResult<()>  {
+            (0..screen_height as usize).step_by(step).fold(Ok(()), |_acc, x| -> GameResult<()>  {
+                let cell = self.board.get_cell_or_dead((x / step) as i32, (y / step) as i32);
+                self.draw_cell(ctx, cell.is_alive(), x, y)
             })
         })
     }
@@ -99,8 +106,8 @@ impl MyGame {
         let max = if w > h { w } else { h };
 
         (0..max as i32).step_by(step).fold(Ok(()), | _acc, y| {
-            graphics::draw(ctx, &self.w_l, (Point2 { x: y as f32, y: 0.0 }, ))?;
-            graphics::draw(ctx, &self.h_l, (Point2 { x: 0.0, y: y as f32 }, ))
+            graphics::draw(ctx, &self.line_w, (Point2 { x: y as f32, y: 0.0 }, ))?;
+            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: y as f32 }, ))
         })
     }
 }
@@ -123,11 +130,10 @@ impl EventHandler for MyGame {
     /// The defined size of the cells we be translate to showed size with de zoom ratio
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
-
         let (w, h) = graphics::size(ctx);
+
         self.draw_board(ctx, w, h)?;
         self.draw_grid(ctx, w, h)?;
-
         graphics::present(ctx)
     }
 
@@ -142,8 +148,8 @@ impl EventHandler for MyGame {
 
     /// Called when the user resizes the window, or when it is resized
     fn resize_event(&mut self, ctx: &mut Context, _w: f32, _h: f32) {
-        let (h_l, w_l) = MyGame::create_line_mesh(ctx);
-        self.h_l = h_l;
-        self.w_l = w_l;
+        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
+        self.line_h = line_h;
+        self.line_w = line_w;
     }
 }

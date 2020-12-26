@@ -15,11 +15,12 @@ pub fn create_file_from_map(file_path: &str) -> Box<Board> {
 }
 
 /// Run the ggez window
+/// Resizable got problems with osx
 fn run_game(board: Box<Board>) {
     let mut c: conf::Conf = conf::Conf::new();
 
     c.window_setup = c.window_setup.title(&"game of life");
-    c.window_mode = c.window_mode.resizable(true);
+    // c.window_mode = c.window_mode.resizable(true);
 
     let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
         .conf(c)
