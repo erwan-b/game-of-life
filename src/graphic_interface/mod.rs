@@ -37,13 +37,13 @@ impl MyGame {
         let (w, h) = graphics::size(ctx);
 
 
-        let line_h = graphics::Mesh::neline_wine(
+        let line_h = graphics::Mesh::new_line(
             ctx, &[ Point2{ x: 0.0, y: 0.0 as f32}, Point2{ x: w, y: 0.0 } ],
             1.0,
             color,
         ).unwrap();
 
-        let line_w = graphics::Mesh::neline_wine(
+        let line_w = graphics::Mesh::new_line(
             ctx, &[ Point2{x: 0.0 as f32, y: 0.0}, Point2{x: 0.0, y: h} ],
             1.0,
             color,
@@ -55,7 +55,7 @@ impl MyGame {
         let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, constants.cell_size, constants.cell_size);
 
         match graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(),
-            cell_mesh_rect, graphics::Color::from_rgb(255, 51, 255),
+                                            cell_mesh_rect, graphics::Color::from_rgb(255, 51, 255),
         ) {
             Ok(mesh) => mesh,
             Err(_e) => panic!("Could not create cell_mesh")
@@ -69,6 +69,7 @@ impl MyGame {
             Duration::new(1, 0)
         );
         let (line_h, line_w) = MyGame::create_line_mesh(ctx);
+        let (w, h) = graphics::size(ctx);
 
         MyGame {
             last_refresh: time::Instant::now(),
@@ -77,7 +78,7 @@ impl MyGame {
             line_h,
             line_w,
             constants,
-            camera: Camera::new()
+            camera: Camera::new(Point2{x: 0, y: 0}, Point2{x: w as usize, y: h as usize})
         }
     }
 
@@ -85,35 +86,37 @@ impl MyGame {
         self.board.apply_on_all();
     }
 
-    fn draw_cell(&self, ctx: &mut Context, alive: bool,  x: usize, y: usize) -> GameResult<()> {
-        if alive {
-            graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
-                x: x as f32,
-                y: y as f32
-            }))
-        } else {
-            Ok(())
-        }
-    }
-
-    fn draw_board(&self, ctx: &mut Context, screen_width: f32, screen_height: f32) -> GameResult<()> {
+    /// Draw each line limitation of the board
+    fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
         let step = self.constants.cell_size as usize;
-
-        (0..screen_width as usize).step_by(step).fold(Ok(()), |_acc, y| -> GameResult<()>  {
-            (0..screen_height as usize).step_by(step).fold(Ok(()), |_acc, x| -> GameResult<()>  {
-                let cell = self.board.get_cell_or_dead((x / step) as i32, (y / step) as i32);
-                self.draw_cell(ctx, cell.is_alive(), x, y)
-            })
-        })
-    }
-
-    fn draw_grid(&self, ctx: &mut Context, w: f32, h: f32) -> GameResult<()> {
-        let step = self.constants.cell_size as usize;
+        let (w, h) = graphics::size(ctx);
         let max = if w > h { w } else { h };
+
 
         (0..max as i32).step_by(step).fold(Ok(()), | _acc, y| {
             graphics::draw(ctx, &self.line_w, (Point2 { x: y as f32, y: 0.0 }, ))?;
             graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: y as f32 }, ))
+        })
+    }
+
+    /// Draw the living cells on the board
+    /// TODO This part take a lot of CPU ><, it should be improvable. The framerate can help.
+    fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
+        let step = self.constants.cell_size as usize;
+
+        self.camera.size_shown_iter()
+            .filter(|(x, y)| x % step == 0 && y % step == 0)
+            .filter_map(|(x, y)|
+                if self.board.get_cell_or_dead((x / step) as i32, (y / step) as i32).is_alive() {
+                    Some((x, y))
+                } else {
+                    None
+                })
+            .fold(Ok(()), | _acc, (x, y)| {
+                graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
+                x: x as f32,
+                y: y as f32
+            }))
         })
     }
 }
@@ -136,10 +139,9 @@ impl EventHandler for MyGame {
     /// The defined size of the cells we be translate to showed size with de zoom ratio
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
-        let (w, h) = graphics::size(ctx);
 
-        self.draw_board(ctx, w, h)?;
-        self.draw_grid(ctx, w, h)?;
+        self.draw_board(ctx)?;
+        self.draw_line(ctx)?;
         graphics::present(ctx)
     }
 

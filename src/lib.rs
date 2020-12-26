@@ -15,7 +15,7 @@ pub fn create_map_from_file(file_path: &str) -> Box<Board> {
     let lines = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
 
-    Box::new(Board::new(500, lines.trim().lines().collect()))
+    Box::new(Board::new(20, lines.trim().lines().collect()))
 }
 
 /// Run the ggez window
