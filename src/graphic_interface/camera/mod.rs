@@ -32,8 +32,10 @@ impl Camera {
 
     pub fn size_shown_iter(&self) -> impl Iterator<Item = (usize, usize) > {
         let x_iterator = (self.position_on_board.x, self.position_on_board.x + self.screen_size.x);
-        let y_iterator = (self.position_on_board.y..self.position_on_board.y + self.screen_size.y);
+        let y_iterator = self.position_on_board.y..self.position_on_board.y + self.screen_size.y;
 
-        y_iterator.flat_map(move |a| (x_iterator.0..x_iterator.1).map(move |b| (a, b)))
+        y_iterator.flat_map(move |a|
+                (x_iterator.0..x_iterator.1).map(move |b| (a, b))
+            )
     }
 }

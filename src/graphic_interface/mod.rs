@@ -100,7 +100,6 @@ impl MyGame {
     }
 
     /// Draw the living cells on the board
-    /// TODO This part take a lot of CPU ><, it should be improvable. The framerate can help.
     fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
         let step = self.constants.cell_size as usize;
 
@@ -137,6 +136,7 @@ impl EventHandler for MyGame {
 
     /// Draw the board on the screen.
     /// The defined size of the cells we be translate to showed size with de zoom ratio
+    /// TODO The draw take a lot of CPU  !!!!
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
 
