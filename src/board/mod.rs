@@ -87,21 +87,19 @@ impl Board {
 
     /// Apply the game of life rules on a certain position on the board
     fn apply_on_pos(&self, cell: &Cell) -> Cell {
-        let adj_live_cells = self.get_adj_cells(cell).iter().filter(|&&elem| elem.is_alive()).count();
+        let adj_live_cells = self.get_adj_cells(cell).iter()
+            .filter(|&&elem| elem.is_alive())
+            .count();
         cell.apply_rules(adj_live_cells)
     }
 
     /// Apply the game of life rules on a row of the board
     fn apply_on_row(&self, row: &Vec<Cell>) -> Vec<Cell> {
-        row.iter().map(|cell|
-            self.apply_on_pos(cell)
-        ).collect()
+        row.iter().map(|cell| self.apply_on_pos(cell)).collect()
     }
 
     /// Apply the game of life rules on the board
     pub fn apply_on_all(&mut self) {
-        self.rows = self.rows.iter()
-            .map(|row| self.apply_on_row(row))
-            .collect();
+        self.rows = self.rows.iter().map(|row| self.apply_on_row(row)).collect();
     }
 }

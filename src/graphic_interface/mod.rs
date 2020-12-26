@@ -10,8 +10,13 @@ use ggez::event::MouseButton;
 use crate::board::Board;
 use crate::graphic_interface::constants::Constants;
 use crate::graphic_interface::camera::Camera;
+use std::time::Duration;
 
 /// `MyGame` describe the game graphic_interface logic
+/// It contain:
+/// <p> - some static mesh  </p>
+/// <p> - some static mesh  </p>
+/// <p> - data about the refresh rate and games constants  </p>
 pub struct MyGame {
     board: Box<Board>,
     camera: Camera,
@@ -48,20 +53,21 @@ impl MyGame {
 
     fn create_cell_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
         let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, constants.cell_size, constants.cell_size);
-        let cell_mesh = match graphics::Mesh::new_rectangle(
-            ctx,
-            graphics::DrawMode::fill(),
-            cell_mesh_rect,
-            graphics::Color::from_rgb(255, 51, 255),
+
+        match graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(),
+            cell_mesh_rect, graphics::Color::from_rgb(255, 51, 255),
         ) {
             Ok(mesh) => mesh,
             Err(_e) => panic!("Could not create cell_mesh")
-        };
-        cell_mesh
+        }
     }
 
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
-        let constants = Constants::new(16.0, 4.0, 1.0);
+        let constants = Constants::new(
+            16.0,
+            4.0,
+            Duration::new(1, 0)
+        );
         let (line_h, line_w) = MyGame::create_line_mesh(ctx);
 
         MyGame {
@@ -119,7 +125,7 @@ impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         let duration = time::Instant::now() - self.last_refresh;
 
-        if  duration.as_secs() > 1 {
+        if  duration > self.constants.refresh_rate  {
             self.last_refresh = time::Instant::now();
             self.next()
         }

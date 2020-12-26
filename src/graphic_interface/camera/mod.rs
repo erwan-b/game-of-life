@@ -3,17 +3,17 @@ use ggez::mint::Point2;
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Camera {
     pos: Point2<usize>,
-    zoom: f32,
+    zoom_ratio: f32,
     default_size: usize
 }
 
 impl Camera {
     pub fn new() -> Self {
-        Camera{pos: Point2{ x: 0, y: 0 }, zoom: 0.0, default_size: 0 }
+        Camera{pos: Point2{ x: 0, y: 0 }, zoom_ratio: 0.0, default_size: 0 }
     }
 
-    pub fn set_zoom(&mut self, zoom: f32) -> Self {
-        self.zoom = zoom;
+    pub fn set_zoom_ratio(&mut self, zoom_ratio: f32) -> Self {
+        self.zoom_ratio = zoom_ratio;
 
         *self
     }

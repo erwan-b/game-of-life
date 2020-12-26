@@ -7,7 +7,11 @@ use ggez::{ ContextBuilder, event, conf };
 use board::{Board};
 use graphic_interface::MyGame;
 
-pub fn create_file_from_map(file_path: &str) -> Box<Board> {
+pub fn create_file_from_map(board: Box<Board>) {
+
+}
+
+pub fn create_map_from_file(file_path: &str) -> Box<Board> {
     let lines = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
 
@@ -37,7 +41,7 @@ fn run_game(board: Box<Board>) {
 }
 
 pub fn load_run(mapfile: &str) {
-    let board = create_file_from_map(mapfile);
+    let board = create_map_from_file(mapfile);
 
     run_game(board);
 }
