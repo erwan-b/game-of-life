@@ -11,7 +11,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(position_on_board: Point2<usize>, screen_size: Point2<usize>) -> Self {
-        let cell_size = 14.0;
+        let cell_size = 16.0;
         let mut pixel_position_on_board =  position_on_board.clone();
 
         pixel_position_on_board.x *= cell_size as usize;

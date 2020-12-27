@@ -88,14 +88,10 @@ impl MyGame {
 
     /// Draw each line limitation of the board
     fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
-        let step = self.constants.cell_size as usize;
-        let (w, h) = graphics::size(ctx);
-        let max = if w > h { w } else { h };
-
-
-        (0..max as i32).step_by(step).fold(Ok(()), | _acc, y| {
-            graphics::draw(ctx, &self.line_w, (Point2 { x: y as f32, y: 0.0 }, ))?;
-            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: y as f32 }, ))
+        self.camera.size_shown_iter().filter(|(x, _y)| *x == 0 )
+        .fold(Ok(()), | _acc, (_x, y)| {
+            graphics::draw(ctx, &self.line_w, (Point2 { x: *y as f32, y: 0.0 }, ))?;
+            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: *y as f32 }, ))
         })
     }
 
