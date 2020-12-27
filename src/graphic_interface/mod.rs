@@ -124,6 +124,7 @@ impl MyGame {
 impl EventHandler for MyGame {
     /// Update the cells there.
     /// There for we call the board function that return a new one with the rules applied on all cells.
+    /// TODO may be put the update part in a thread so we can have a huge board
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         let duration = time::Instant::now() - self.last_refresh;
 
