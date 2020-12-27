@@ -30,6 +30,8 @@ impl Camera {
         *self
     }
 
+    /// Return an iterator that go throw all screen pixels
+    /// TODO Need to be more clear about the pixels pos and the cells position
     pub fn size_shown_iter(&self) -> impl Iterator<Item = (usize, usize) > {
         let x_iterator = (self.position_on_board.x, self.position_on_board.x + self.screen_size.x);
         let y_iterator = self.position_on_board.y..self.position_on_board.y + self.screen_size.y;
