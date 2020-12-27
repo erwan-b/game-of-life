@@ -104,14 +104,14 @@ impl MyGame {
         let step = self.constants.cell_size as usize;
 
         self.camera.size_shown_iter()
-            .filter(|(x, y)| x % step == 0 && y % step == 0)
             .filter_map(|(x, y)|
-                if self.board.get_cell_or_dead((x / step) as i32, (y / step) as i32).is_alive() {
+                if self.board.get_cell_or_dead((*x / step) as i32, (*y / step) as i32).is_alive() {
                     Some((x, y))
                 } else {
                     None
-                })
-            .fold(Ok(()), | _acc, (x, y)| {
+                }
+            )
+            .fold(Ok(()), | _acc, (&x, &y)| {
                 graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
                 x: x as f32,
                 y: y as f32
