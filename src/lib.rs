@@ -20,6 +20,7 @@ pub fn create_map_from_file(file_path: &str) -> Box<Board> {
 
 /// Run the ggez window
 /// Resizable got problems with osx
+/// The resizable is commit because it don't work on OSX and linux. It can be cause by ggez
 fn run_game(board: Box<Board>) {
     let mut c: conf::Conf = conf::Conf::new();
 
