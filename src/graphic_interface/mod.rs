@@ -1,7 +1,7 @@
 use std::time;
 mod constants;
 mod camera;
-mod imGuiWrapper;
+mod im_gui_wrapper;
 
 use ggez::mint::Point2;
 use ggez::{graphics, Context, GameResult};
@@ -9,8 +9,9 @@ use ggez::event::{EventHandler};
 use ggez::event::MouseButton;
 
 use crate::board::Board;
-use crate::graphic_interface::constants::Constants;
-use crate::graphic_interface::camera::Camera;
+use constants::Constants;
+use camera::Camera;
+use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 
 /// `MyGame` describe the game graphic_interface logic
@@ -21,6 +22,7 @@ use std::time::Duration;
 pub struct MyGame {
     board: Box<Board>,
     camera: Camera,
+    img_wrapper: ImGuiWrapper,
 
     cell_mesh: graphics::Mesh,
     line_h: graphics::Mesh,
@@ -71,11 +73,13 @@ impl MyGame {
         );
         let (line_h, line_w) = MyGame::create_line_mesh(ctx);
         let (w, h) = graphics::size(ctx);
+        let img = ImGuiWrapper::new(ctx);
 
         MyGame {
             last_refresh: time::Instant::now(),
             board,
             cell_mesh: MyGame::create_cell_mesh(ctx, constants),
+            img_wrapper: img,
             line_h,
             line_w,
             constants,
@@ -140,17 +144,38 @@ impl EventHandler for MyGame {
 
         self.draw_board(ctx)?;
         self.draw_line(ctx)?;
+        self.img_wrapper.render(ctx, 2.0);
+
         graphics::present(ctx)
     }
 
-    /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut Context,
-        _button: MouseButton,
-        _x: f32,
-        _y: f32,
-    ) { }
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        self.img_wrapper.update_mouse_pos(x, y);
+        self.img_wrapper.update_mouse_down(button);
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        self.img_wrapper.update_mouse_pos(x, y);
+        self.img_wrapper.update_mouse_up(button);
+    }
+
+    /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
+
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
+        self.img_wrapper.update_mouse_pos(x, y);
+    }
 
     /// Called when the user resizes the window, or when it is resized
     fn resize_event(&mut self, ctx: &mut Context, _w: f32, _h: f32) {

@@ -25,12 +25,15 @@ fn run_game(board: Box<Board>) {
     let mut c: conf::Conf = conf::Conf::new();
 
     c.window_setup = c.window_setup.title(&"game of life");
-    // c.window_mode = c.window_mode.resizable(true);
+    c.window_mode = c.window_mode.resizable(true);
 
     let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
         .conf(c)
         .build()
         .expect("aieee, could not create ggez context!");
+
+    let hidpi_factor = event_loop.get_primary_monitor().get_hidpi_factor() as f32;
+    println!("{}", hidpi_factor);
 
     let mut my_game = MyGame::new(&mut ctx, board);
 
