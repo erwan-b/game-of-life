@@ -149,6 +149,7 @@ impl EventHandler for MyGame {
         graphics::present(ctx)
     }
 
+    /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut Context,
@@ -171,7 +172,9 @@ impl EventHandler for MyGame {
         self.img_wrapper.update_mouse_up(button);
     }
 
-    /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
+        self.img_wrapper.update_scroll(x, y);
+    }
 
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
         self.img_wrapper.update_mouse_pos(x, y);
