@@ -9,6 +9,7 @@ use imgui::*;
 use imgui_gfx_renderer::*;
 
 use std::time::Instant;
+use imgui::StyleColor::Button;
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 struct MouseState {
@@ -68,7 +69,8 @@ impl ImGuiWrapper {
         {
             // Window
             Window::new(im_str!("Hello world"))
-                .size([300.0, 100.0], Condition::FirstUseEver)
+                .menu_bar(false).title_bar(false).movable(false)
+                .resizable(false).size([300.0, 100.0], Condition::FirstUseEver)
                 .build(&ui, || {
                     ui.text(im_str!("Hello world!"));
                     ui.text(im_str!("こんにちは世界！"));
@@ -80,8 +82,6 @@ impl ImGuiWrapper {
                         mouse_pos[0], mouse_pos[1]
                     ));
                 });
-
-            ui.show_demo_window(&mut show);
         }
 
         // Render
