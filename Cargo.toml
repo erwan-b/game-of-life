@@ -10,3 +10,9 @@ edition = "2018"
 minifb = "0.19.1"
 clap = "2.31.0"
 ggez = "0.5"
+
+gfx_core = "0.8.3"
+gfx_device_gl = "0.15.3"
+
+imgui = "0.0.22"
+imgui-gfx-renderer = "0.0.22"

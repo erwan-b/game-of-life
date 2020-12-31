@@ -1,6 +1,7 @@
 use std::time;
 mod constants;
 mod camera;
+mod imGuiWrapper;
 
 use ggez::mint::Point2;
 use ggez::{graphics, Context, GameResult};
