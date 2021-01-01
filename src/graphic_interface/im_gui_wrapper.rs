@@ -55,7 +55,6 @@ impl ImGuiWrapper {
 
         // Create new frame
         let now = Instant::now();
-        let delta = now - self.last_frame;
         self.last_frame = now;
 
         let (draw_width, draw_height) = graphics::drawable_size(ctx);
@@ -63,14 +62,16 @@ impl ImGuiWrapper {
         self.imgui.io_mut().display_framebuffer_scale = [hidpi_factor, hidpi_factor];
 
         let ui = self.imgui.frame();
-        let mut show = true;
 
         // Various ui things
         {
+            let (w, h) = graphics::size(ctx);
+
             // Window
             Window::new(im_str!("Hello world"))
                 .menu_bar(false).title_bar(false).movable(false)
-                .resizable(false).size([300.0, 100.0], Condition::FirstUseEver)
+                .resizable(false).size([w, 100.0], Condition::Always)
+                .position([0.0, h - 100.0], Condition::Always)
                 .build(&ui, || {
                     ui.text(im_str!("Hello world!"));
                     ui.text(im_str!("こんにちは世界！"));

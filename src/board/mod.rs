@@ -44,6 +44,17 @@ impl Board {
         Board{default_size: size, rows}
     }
 
+    pub fn set_cell(&mut self, x: i32, y: i32, status: bool) -> Option<&Cell> {
+        let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
+
+        c.status = if status {
+            STATUS::ALIVE
+        } else {
+            STATUS::DEAD
+        };
+        Some(c)
+    }
+
     pub fn nb_row(&self) -> usize {
         self.rows.len()
     }

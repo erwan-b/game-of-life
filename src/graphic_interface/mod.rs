@@ -157,6 +157,7 @@ impl EventHandler for MyGame {
         x: f32,
         y: f32,
     ) {
+        self.board.set_cell((x / 16.0) as i32, (y / 16.0) as i32, true);
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
     }
@@ -172,12 +173,12 @@ impl EventHandler for MyGame {
         self.img_wrapper.update_mouse_up(button);
     }
 
-    fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
-        self.img_wrapper.update_scroll(x, y);
-    }
-
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
         self.img_wrapper.update_mouse_pos(x, y);
+    }
+
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
+        self.img_wrapper.update_scroll(x, y);
     }
 
     /// Called when the user resizes the window, or when it is resized
