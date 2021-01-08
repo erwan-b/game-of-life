@@ -13,6 +13,7 @@ use constants::Constants;
 use camera::Camera;
 use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
+use crate::graphic_interface::im_gui_wrapper::UiButton;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -30,6 +31,7 @@ pub struct MyGame {
 
     last_refresh : time::Instant,
     constants: Constants,
+    play: bool
 }
 
 /// The impl is here to define our graphic_interface logic called by the `EventHandler`
@@ -83,7 +85,8 @@ impl MyGame {
             line_h,
             line_w,
             constants,
-            camera: Camera::new(Point2{x: 0, y: 0}, Point2{x: w as usize, y: h as usize})
+            camera: Camera::new(Point2{x: 0, y: 0}, Point2{x: w as usize, y: h as usize}),
+            play: false
         }
     }
 
@@ -144,7 +147,15 @@ impl EventHandler for MyGame {
 
         self.draw_board(ctx)?;
         self.draw_line(ctx)?;
-        self.img_wrapper.render(ctx, 2.0);
+        self.img_wrapper.render(ctx, 2.0, self.play);
+
+        match self.img_wrapper.get_last_button() {
+            Some(UiButton::NEXT) => {}
+            Some(UiButton::PREV) => {}
+            Some(UiButton::STOP) => { self.play = false; }
+            Some(UiButton::PLAY) => { self.play = true; }
+            _ => {}
+        }
 
         graphics::present(ctx)
     }

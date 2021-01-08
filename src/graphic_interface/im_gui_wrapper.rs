@@ -1,4 +1,4 @@
-use ggez::event::{KeyCode, KeyMods, MouseButton};
+use ggez::event::{ MouseButton };
 use ggez::graphics;
 use ggez::Context;
 
@@ -9,8 +9,8 @@ use imgui::*;
 use imgui_gfx_renderer::*;
 
 use std::time::Instant;
-use imgui::StyleColor::Button;
 
+/// Describe the state of the mouse on a frame
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 struct MouseState {
     pos: (i32, i32),
@@ -20,11 +20,20 @@ struct MouseState {
     wheel_h: f32,
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum UiButton {
+    NEXT,
+    PREV,
+    STOP,
+    PLAY,
+}
+
 pub struct ImGuiWrapper {
     pub imgui: imgui::Context,
     pub renderer: Renderer<gfx_core::format::Rgba8, gfx_device_gl::Resources>,
     last_frame: Instant,
-    mouse_state: MouseState
+    mouse_state: MouseState,
+    last_button: Option<UiButton>,
 }
 
 
@@ -36,7 +45,7 @@ impl ImGuiWrapper {
     pub fn new(ctx: &mut Context) -> Self {
         let mut imgui = imgui::Context::create();
         let (factory, _, _, _, _) = graphics::gfx_objects(ctx);
-        let mut renderer = Renderer::init(&mut imgui, &mut *factory, Shaders::GlSl400).unwrap();
+        let renderer = Renderer::init(&mut imgui, &mut *factory, Shaders::GlSl400).unwrap();
 
 
         Self {
@@ -44,26 +53,33 @@ impl ImGuiWrapper {
             renderer,
             last_frame: Instant::now(),
             mouse_state: MouseState::default(),
+            last_button: None
         }
+    }
+
+    fn click_on_button(&mut self, button: UiButton) {
+        println!("click");
+        self.last_button = Some(button);
     }
 
     // This is what we will call on every render iteration
     // to render the imgui bits on top of our game.
-    pub fn render(&mut self, ctx: &mut Context,  hidpi_factor: f32) {
+    pub fn render(&mut self, ctx: &mut Context,  hidpi_factor: f32, play: bool) {
         // Update mouse
         self.update_mouse();
 
         // Create new frame
         let now = Instant::now();
         self.last_frame = now;
+        self.last_button = None;
 
         let (draw_width, draw_height) = graphics::drawable_size(ctx);
         self.imgui.io_mut().display_size = [draw_width, draw_height];
         self.imgui.io_mut().display_framebuffer_scale = [hidpi_factor, hidpi_factor];
 
         let ui = self.imgui.frame();
-
         {
+            let mut click_button = None;
             let (w, h) = graphics::size(ctx);
 
             // Window
@@ -75,21 +91,25 @@ impl ImGuiWrapper {
                     ui.separator();
                     let mouse_pos = ui.io().mouse_pos;
                     if ui.button(im_str!("|<"),  [20.0, 20.0]) {
-                        println!("click");
+                        click_button = Some(UiButton::PREV);
                     }
                     ui.same_line(32.0);
-                    if ui.button(im_str!("|>"),  [20.0, 20.0]) {
-                        println!("click");
+                    if !play && ui.button(im_str!("|>"),  [20.0, 20.0]) {
+                        click_button = Some(UiButton::PLAY);
+                    }
+                    if play && ui.button(im_str!("||"),  [20.0, 20.0]) {
+                        click_button = Some(UiButton::STOP);
                     }
                     ui.same_line(54.0);
                     if ui.button(im_str!(">|"),  [20.0, 20.0]) {
-                        println!("click");
+                        click_button = Some(UiButton::NEXT);
                     }
                     ui.text(format!(
                         "Mouse Position: ({:.1},{:.1})",
                         mouse_pos[0], mouse_pos[1]
                     ));
                 });
+            self.last_button = click_button;
         }
 
         // Render
@@ -99,6 +119,10 @@ impl ImGuiWrapper {
                 &mut RenderTargetView::new(render_target.clone()),
                 draw_data).unwrap();
 
+    }
+
+    pub fn get_last_button(&self) -> Option<UiButton> {
+       self.last_button
     }
 
     fn update_mouse(&mut self) {
