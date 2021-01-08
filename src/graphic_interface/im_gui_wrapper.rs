@@ -63,7 +63,6 @@ impl ImGuiWrapper {
 
         let ui = self.imgui.frame();
 
-        // Various ui things
         {
             let (w, h) = graphics::size(ctx);
 
@@ -73,11 +72,19 @@ impl ImGuiWrapper {
                 .resizable(false).size([w, 100.0], Condition::Always)
                 .position([0.0, h - 100.0], Condition::Always)
                 .build(&ui, || {
-                    ui.text(im_str!("Hello world!"));
-                    ui.text(im_str!("こんにちは世界！"));
-                    ui.text(im_str!("This...is...imgui-rs!"));
                     ui.separator();
                     let mouse_pos = ui.io().mouse_pos;
+                    if ui.button(im_str!("|<"),  [20.0, 20.0]) {
+                        println!("click");
+                    }
+                    ui.same_line(32.0);
+                    if ui.button(im_str!("|>"),  [20.0, 20.0]) {
+                        println!("click");
+                    }
+                    ui.same_line(54.0);
+                    if ui.button(im_str!(">|"),  [20.0, 20.0]) {
+                        println!("click");
+                    }
                     ui.text(format!(
                         "Mouse Position: ({:.1},{:.1})",
                         mouse_pos[0], mouse_pos[1]
@@ -88,15 +95,10 @@ impl ImGuiWrapper {
         // Render
         let (factory, _, encoder, _, render_target) = graphics::gfx_objects(ctx);
         let draw_data = ui.render();
-        self
-            .renderer
-            .render(
-                &mut *factory,
-                encoder,
+        self.renderer.render(&mut *factory, encoder,
                 &mut RenderTargetView::new(render_target.clone()),
-                draw_data,
-            )
-            .unwrap();
+                draw_data).unwrap();
+
     }
 
     fn update_mouse(&mut self) {
