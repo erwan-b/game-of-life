@@ -139,7 +139,7 @@ impl EventHandler for MyGame {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         match self.img_wrapper.get_last_button() {
             Some(UiButton::NEXT) => { self.game_step += 1;}
-            Some(UiButton::PREV) => {}
+            Some(UiButton::PREV) => { self.game_step -= 1;}
             Some(UiButton::STOP) => { self.play = false; }
             Some(UiButton::PLAY) => { self.play = true; }
             _ => {}
