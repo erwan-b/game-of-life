@@ -9,8 +9,8 @@ pub enum STATUS {
 }
 
 impl STATUS {
-    pub fn get_char(&self) -> char {
-        if STATUS::DEAD == *self {
+    pub fn get_char(self) -> char {
+        if STATUS::DEAD == self {
             '0'
         } else {
             '1'
@@ -22,6 +22,16 @@ impl STATUS {
             '0' => STATUS::DEAD,
             '1' => STATUS::ALIVE,
             _other => panic!("Wrong format")
+        }
+    }
+
+    pub fn inverse(self) -> Self {
+        if STATUS::ALIVE == self {
+            STATUS::DEAD
+        } else if STATUS::DEAD == self {
+            STATUS::ALIVE
+        } else {
+            self
         }
     }
 }

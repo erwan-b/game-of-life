@@ -14,6 +14,8 @@ use camera::Camera;
 use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
+use crate::board::cell::{STATUS, Cell};
+use std::ops::Sub;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -23,14 +25,15 @@ use crate::graphic_interface::im_gui_wrapper::UiButton;
 pub struct MyGame {
     board: Box<Board>,
     camera: Camera,
-    img_wrapper: ImGuiWrapper,
+    constants: Constants,
 
+    img_wrapper: ImGuiWrapper,
     cell_mesh: graphics::Mesh,
     line_h: graphics::Mesh,
     line_w: graphics::Mesh,
 
     last_refresh : time::Instant,
-    constants: Constants,
+    game_step: i64,
     play: bool
 }
 
@@ -59,8 +62,11 @@ impl MyGame {
     fn create_cell_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
         let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, constants.cell_size, constants.cell_size);
 
-        match graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(),
-                                            cell_mesh_rect, graphics::Color::from_rgb(255, 51, 255),
+        match graphics::Mesh::new_rectangle(
+            ctx,
+            graphics::DrawMode::fill(),
+            cell_mesh_rect,
+            graphics::Color::from_rgb(255, 51, 255)
         ) {
             Ok(mesh) => mesh,
             Err(_e) => panic!("Could not create cell_mesh")
@@ -78,15 +84,16 @@ impl MyGame {
         let img = ImGuiWrapper::new(ctx);
 
         MyGame {
-            last_refresh: time::Instant::now(),
             board,
+            constants,
             cell_mesh: MyGame::create_cell_mesh(ctx, constants),
             img_wrapper: img,
             line_h,
             line_w,
-            constants,
             camera: Camera::new(Point2{x: 0, y: 0}, Point2{x: w as usize, y: h as usize}),
-            play: false
+            play: false,
+            game_step: 0,
+            last_refresh: time::Instant::now()
         }
     }
 
@@ -130,11 +137,23 @@ impl EventHandler for MyGame {
     /// There for we call the board function that return a new one with the rules applied on all cells.
     /// TODO may be put the update part in a thread so we can have a huge board
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        let duration = time::Instant::now() - self.last_refresh;
+        match self.img_wrapper.get_last_button() {
+            Some(UiButton::NEXT) => { self.game_step += 1;}
+            Some(UiButton::PREV) => {}
+            Some(UiButton::STOP) => { self.play = false; }
+            Some(UiButton::PLAY) => { self.play = true; }
+            _ => {}
+        }
 
-        if  duration > self.constants.refresh_rate  {
+        let duration = time::Instant::now() - self.last_refresh;
+        if duration > self.constants.refresh_rate && self.play {
+            self.game_step += 1;
+        }
+
+        if self.game_step > 0 {
             self.last_refresh = time::Instant::now();
-            self.next()
+            self.next();
+            self.game_step -= 1;
         }
         Ok(())
     }
@@ -149,14 +168,6 @@ impl EventHandler for MyGame {
         self.draw_line(ctx)?;
         self.img_wrapper.render(ctx, 2.0, self.play);
 
-        match self.img_wrapper.get_last_button() {
-            Some(UiButton::NEXT) => {}
-            Some(UiButton::PREV) => {}
-            Some(UiButton::STOP) => { self.play = false; }
-            Some(UiButton::PLAY) => { self.play = true; }
-            _ => {}
-        }
-
         graphics::present(ctx)
     }
 
@@ -168,7 +179,11 @@ impl EventHandler for MyGame {
         x: f32,
         y: f32,
     ) {
-        self.board.set_cell((x / 16.0) as i32, (y / 16.0) as i32, true);
+        let (w, h) = ((x / 16.0) as i32, (y / 16.0) as i32);
+        match self.board.get_cell(w, h) {
+            Some(cell) => self.board.set_cell(w, h, cell.status.inverse()),
+            _ => None
+        };
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
     }
