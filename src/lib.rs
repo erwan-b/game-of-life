@@ -6,9 +6,14 @@ use ggez::{ ContextBuilder, event, conf };
 
 use board::{Board};
 use graphic_interface::MyGame;
+use std::ops::Add;
 
-pub fn create_file_from_map(board: Box<Board>) {
+pub fn create_file_from_map(board: Box<Board>, _file_path: &str) {
+    let res = (0..=board.nb_row())
+        .map(|elem| board.get_line(elem) + "\n")
+        .collect::<String>();
 
+    fs::write("./map/saved_map.txt", res);
 }
 
 pub fn create_map_from_file(file_path: &str) -> Box<Board> {
