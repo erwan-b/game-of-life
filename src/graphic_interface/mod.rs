@@ -129,6 +129,17 @@ impl MyGame {
             }))
         })
     }
+
+    fn update_button(&mut self) {
+        match self.img_wrapper.get_last_button() {
+            Some(UiButton::NEXT) => { self.game_step += 1;}
+            Some(UiButton::PREV) => { self.game_step -= 1;}
+            Some(UiButton::STOP) => { self.play = false; }
+            Some(UiButton::PLAY) => { self.play = true; }
+            _ => {}
+        }
+        self.constants.refresh_rate = self.img_wrapper.get_time_per_step();
+    }
 }
 
 /// Define the `EventHandler` to mange the ggez lib events
@@ -137,13 +148,7 @@ impl EventHandler for MyGame {
     /// There for we call the board function that return a new one with the rules applied on all cells.
     /// TODO may be put the update part in a thread so we can have a huge board
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        match self.img_wrapper.get_last_button() {
-            Some(UiButton::NEXT) => { self.game_step += 1;}
-            Some(UiButton::PREV) => { self.game_step -= 1;}
-            Some(UiButton::STOP) => { self.play = false; }
-            Some(UiButton::PLAY) => { self.play = true; }
-            _ => {}
-        }
+        self.update_button();
 
         let duration = time::Instant::now() - self.last_refresh;
         if duration > self.constants.refresh_rate && self.play {

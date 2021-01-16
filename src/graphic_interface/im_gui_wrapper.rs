@@ -8,7 +8,8 @@ use gfx_device_gl;
 use imgui::*;
 use imgui_gfx_renderer::*;
 
-use std::time::Instant;
+use std::time::{Instant, Duration};
+use std::ops::RangeInclusive;
 
 /// Describe the state of the mouse on a frame
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
@@ -31,9 +32,11 @@ pub enum UiButton {
 pub struct ImGuiWrapper {
     pub imgui: imgui::Context,
     pub renderer: Renderer<gfx_core::format::Rgba8, gfx_device_gl::Resources>,
+
     last_frame: Instant,
     mouse_state: MouseState,
     last_button: Option<UiButton>,
+    time_per_step: Duration
 }
 
 
@@ -53,7 +56,8 @@ impl ImGuiWrapper {
             renderer,
             last_frame: Instant::now(),
             mouse_state: MouseState::default(),
-            last_button: None
+            last_button: None,
+            time_per_step: Duration::new(1, 0)
         }
     }
 
@@ -79,6 +83,12 @@ impl ImGuiWrapper {
 
         let ui = self.imgui.frame();
         {
+            let mut slider = self.time_per_step.as_millis() as u64;
+            let mut s = Slider::new(
+                im_str!("step time, in millisecond"),
+                RangeInclusive::new(0, 2000)
+            );
+
             let mut click_button = None;
             let (w, h) = graphics::size(ctx);
 
@@ -88,6 +98,7 @@ impl ImGuiWrapper {
                 .resizable(false).size([w, 100.0], Condition::Always)
                 .position([0.0, h - 100.0], Condition::Always)
                 .build(&ui, || {
+                    s.build(&ui, &mut slider);
                     ui.separator();
                     let mouse_pos = ui.io().mouse_pos;
                     if ui.button(im_str!("|<"),  [20.0, 20.0]) {
@@ -110,6 +121,7 @@ impl ImGuiWrapper {
                     ));
                 });
             self.last_button = click_button;
+            self.time_per_step = Duration::from_millis(slider as u64)
         }
 
         // Render
@@ -119,6 +131,10 @@ impl ImGuiWrapper {
                 &mut RenderTargetView::new(render_target.clone()),
                 draw_data).unwrap();
 
+    }
+
+    pub fn get_time_per_step(&self) -> Duration {
+        self.time_per_step
     }
 
     pub fn get_last_button(&self) -> Option<UiButton> {
