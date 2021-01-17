@@ -6,7 +6,6 @@ use ggez::{ ContextBuilder, event, conf };
 
 use board::{Board};
 use graphic_interface::MyGame;
-use std::ops::Add;
 
 pub const MAP_SIZE: usize = 200;
 

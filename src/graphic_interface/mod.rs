@@ -14,7 +14,6 @@ use camera::Camera;
 use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
-use crate::board::cell::{STATUS, Cell};
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -96,6 +95,7 @@ impl MyGame {
 
     pub fn next(&mut self) {
         self.board.apply_on_all();
+        self.constants.turns += 1;
     }
 
     /// Draw each line limitation of the board
@@ -109,8 +109,6 @@ impl MyGame {
 
     /// Draw the living cells on the board
     fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
-        let step = self.camera.cell_size as usize;
-
         self.camera.size_shown_iter()
             .filter_map(|pixel|
                 if self.board.get_cell_or_dead(

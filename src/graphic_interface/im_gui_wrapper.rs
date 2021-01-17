@@ -84,7 +84,7 @@ impl ImGuiWrapper {
         let ui = self.imgui.frame();
         {
             let mut slider = self.time_per_step.as_millis() as u64;
-            let mut s = Slider::new(
+            let s = Slider::new(
                 im_str!("step time, in millisecond"),
                 RangeInclusive::new(0, 2000)
             );

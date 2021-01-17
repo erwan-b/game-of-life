@@ -6,12 +6,14 @@ use std::time::Duration;
 #[derive(Clone, Copy)]
 pub struct Constants {
     pub refresh_rate: Duration,
+    pub turns: usize
 }
 
 impl Constants {
     pub fn new(refresh_rate: Duration) -> Self {
         Constants {
             refresh_rate,
+            turns: 0,
         }
     }
 }

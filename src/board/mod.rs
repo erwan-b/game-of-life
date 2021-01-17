@@ -1,10 +1,12 @@
 pub mod cell;
 
 use cell::{Cell, STATUS};
+use std::collections::VecDeque;
 
 pub struct Board {
     default_size: usize,
     rows: Vec<Vec<Cell>>,
+    history: VecDeque<Box<Vec<Cell>>>
 }
 
 /// Define the board logic
@@ -41,7 +43,7 @@ impl Board {
             rows.push(line);
         });
 
-        Board{default_size: size, rows}
+        Board{default_size: size, rows, history: VecDeque::with_capacity(1001)}
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
@@ -101,12 +103,25 @@ impl Board {
     }
 
     /// Apply the game of life rules on a row of the board
-    fn apply_on_row(&self, row: &Vec<Cell>) -> Vec<Cell> {
-        row.iter().map(|cell| self.apply_on_pos(cell)).collect()
+    fn apply_on_row(&self, row: &Vec<Cell>, register_cells: &mut Box<Vec<Cell>>) -> Vec<Cell> {
+        row.iter().map(|cell| {
+            let c = self.apply_on_pos(cell);
+            register_cells.push(c);
+            c
+        }).collect()
     }
 
     /// Apply the game of life rules on the board
     pub fn apply_on_all(&mut self) {
-        self.rows = self.rows.iter().map(|row| self.apply_on_row(row)).collect();
+        let mut register_cells  = Box::new(vec![]);
+        {
+            let mut copy_register = register_cells.clone();
+            self.rows = self.rows.iter().map(|row| self.apply_on_row(row, &mut copy_register)).collect();
+        }
+
+        if self.history.len() >= 100 {
+            self.history.pop_back();
+        }
+        self.history.push_front(register_cells);
     }
 }
