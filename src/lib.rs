@@ -8,6 +8,8 @@ use board::{Board};
 use graphic_interface::MyGame;
 use std::ops::Add;
 
+pub const MAP_SIZE: usize = 200;
+
 pub fn create_file_from_map(board: Box<Board>, _file_path: &str) {
     let res = (0..=board.nb_row())
         .map(|elem| board.get_line(elem) + "\n")
@@ -20,7 +22,7 @@ pub fn create_map_from_file(file_path: &str) -> Box<Board> {
     let lines = fs::read_to_string(file_path)
         .expect("Something went wrong reading the file");
 
-    Box::new(Board::new(20, lines.trim().lines().collect()))
+    Box::new(Board::new(MAP_SIZE, lines.trim().lines().collect()))
 }
 
 /// Run the ggez window

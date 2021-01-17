@@ -15,7 +15,6 @@ use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
 use crate::board::cell::{STATUS, Cell};
-use std::ops::Sub;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -59,8 +58,8 @@ impl MyGame {
         (line_h, line_w)
     }
 
-    fn create_cell_mesh(ctx: &mut Context, constants: Constants) -> graphics::Mesh {
-        let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, constants.cell_size, constants.cell_size);
+    fn create_cell_mesh(ctx: &mut Context, camera: &Camera) -> graphics::Mesh {
+        let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, camera.cell_size, camera.cell_size);
 
         match graphics::Mesh::new_rectangle(
             ctx,
@@ -74,23 +73,21 @@ impl MyGame {
     }
 
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
-        let constants = Constants::new(
-            16.0,
-            4.0,
-            Duration::new(1, 0)
-        );
-        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
         let (w, h) = graphics::size(ctx);
+        let pos = board.nb_row() / 2 - 10;
+        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
+
+        let camera = Camera::new(Point2{x: pos, y: pos}, Point2{x: w as usize, y: h as usize});
         let img = ImGuiWrapper::new(ctx);
 
         MyGame {
             board,
-            constants,
-            cell_mesh: MyGame::create_cell_mesh(ctx, constants),
+            constants: Constants::new(Duration::new(1, 0)),
+            cell_mesh: MyGame::create_cell_mesh(ctx, &camera),
             img_wrapper: img,
             line_h,
             line_w,
-            camera: Camera::new(Point2{x: 0, y: 0}, Point2{x: w as usize, y: h as usize}),
+            camera,
             play: false,
             game_step: 0,
             last_refresh: time::Instant::now()
@@ -103,31 +100,32 @@ impl MyGame {
 
     /// Draw each line limitation of the board
     fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
-        self.camera.size_shown_iter().filter(|(x, _y)| *x == 0 )
-        .fold(Ok(()), | _acc, (_x, y)| {
-            graphics::draw(ctx, &self.line_w, (Point2 { x: *y as f32, y: 0.0 }, ))?;
-            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: *y as f32 }, ))
+        self.camera.size_shown_iter().filter(|&pixel| pixel.screen_pos.x ==  0)
+        .fold(Ok(()), | _acc, pixel|{
+            graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.y as f32, y: 0.0 }, ))?;
+            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: pixel.screen_pos.y as f32 }, ))
         })
     }
 
     /// Draw the living cells on the board
     fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
-        let step = self.constants.cell_size as usize;
+        let step = self.camera.cell_size as usize;
 
         self.camera.size_shown_iter()
-            .filter_map(|(x, y)|
-                if self.board.get_cell_or_dead((*x / step) as i32, (*y / step) as i32).is_alive() {
-                    Some((x, y))
+            .filter_map(|pixel|
+                if self.board.get_cell_or_dead(
+                    (pixel.board_pixel_pos.x as f32 / self.camera.cell_size) as i32,
+                    (pixel.board_pixel_pos.y as f32 / self.camera.cell_size) as i32,).is_alive() {
+                    Some(pixel)
                 } else {
                     None
-                }
-            )
-            .fold(Ok(()), | _acc, (&x, &y)| {
+                })
+            .fold(Ok(()), | _acc, pixel| {
                 graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
-                x: x as f32,
-                y: y as f32
-            }))
-        })
+                    x: pixel.screen_pos.x as f32,
+                    y: pixel.screen_pos.y as f32
+                }))
+            })
     }
 
     fn update_button(&mut self) {

@@ -10,7 +10,7 @@ pub struct Board {
 /// Define the board logic
 impl Board {
     /// Construct an empty board
-    /// [TODO] make this more readable
+    /// TODO make this more readable
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
         let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
         let get_status = |x: i64, y: i64| -> Option<STATUS> {
