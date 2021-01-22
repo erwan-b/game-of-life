@@ -15,3 +15,8 @@ Have a simple program to study and play with the rules of the original game.
 Understand it and create complex object.
 
 The soft should manage high number of cells at the same time, show and not shown, to manage highly complex patterns.
+
+## Run
+```shell
+cargo run -- ./map/base.map
+```
