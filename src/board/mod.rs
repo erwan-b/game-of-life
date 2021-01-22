@@ -1,7 +1,7 @@
 pub mod cell;
 
 use cell::{Cell, STATUS};
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashSet};
 
 pub struct Board {
     default_size: usize,
@@ -101,22 +101,37 @@ impl Board {
     /// Apply the game of life rules on a certain position on the board
     fn apply_on_pos(&self, cell: &Cell) -> Cell {
         let adj_live_cells = self.get_adj_cells(cell).iter()
-            .filter(|&&elem| elem.is_alive())
-            .count();
+            .filter(|&&elem| elem.is_alive()).count();
         cell.apply_rules(adj_live_cells)
+    }
+
+    fn get_actual_interest_zone(&self) -> HashSet<(usize, usize)>{
+        self.actual.iter()
+            .map(|cell| (cell.x as usize / 10, cell.y as usize / 10))
+            .flat_map(|elem| {
+                ((elem.1 - 1)..(elem.1 + 2)).flat_map(move |a| {
+                    ((elem.0 - 1)..(elem.0 + 2)).map( move |b| (b, a))
+                })
+            })
+            .collect::<HashSet<(usize, usize)>>().iter()
+            .map(|&elem| (elem.0 * 10, elem.1 * 10))
+            .flat_map(|(x, y)|
+                (y..(y + 10)).flat_map(move |a| (x..(x + 10)).map(move |b| (b, a)))
+            ).collect()
     }
 
     /// Apply the game of life rules on the board
     /// Split the board in 10 x 10 square and check active one
     pub fn next(&mut self) {
-        let mut res;
-        res = self.actual.iter()
-            .map(|cell| self.apply_on_pos(cell))
-            .filter(|&&elem| elem.is_alive()).collect::<Vec<Cell>>();
+        let res = self.get_actual_interest_zone().iter()
+            .map(|&(x, y)| self.get_cell_or_dead(x as i32, y as i32))
+            .map(|cell| self.apply_on_pos(&cell))
+            .filter(|cell| cell.is_alive())
+            .collect::<Vec<Cell>>();
 
-        res = res.iter()
-            .map(|&cell| self.set_cell(cell.x, cell.y, cell.status).unwrap())
-            .filter(|&&elem| elem.is_alive()).collect();
+
+        self.actual.clone().iter().for_each(|cell| { self.set_cell(cell.x, cell.y, STATUS::DEAD); });
+        res.iter().for_each(|cell| { self.set_cell(cell.x, cell.y, cell.status); });
 
         if self.history.len() >= 10 {
             self.history.pop_back();
@@ -125,20 +140,12 @@ impl Board {
         self.actual = Box::new(res);
     }
 
-    fn apply_prev(&mut self) {
-        self.actual.clone().iter().for_each(|&cell| {
-            self.set_cell(cell.x - 1, cell.y + 1, STATUS::DEAD);
-            self.set_cell(cell.x, cell.y + 1,  STATUS::DEAD);
-            self.set_cell(cell.x + 1, cell.y + 1, STATUS::DEAD);
-            self.set_cell(cell.x + 1, cell.y, STATUS::DEAD);
-            self.set_cell(cell.x, cell.y, cell.status);
-        })
-    }
-
     pub fn prev(&mut self) {
         if self.history.len() > 0 {
+            self.actual.clone().iter().for_each(|&cell| { self.set_cell(cell.x,  cell.y, STATUS::DEAD); });
+
             self.actual = self.history.pop_front().unwrap();
-            self.apply_prev();
+            self.actual.clone().iter().for_each(|&cell| { self.set_cell(cell.x, cell.y, cell.status); })
         }
     }
 }

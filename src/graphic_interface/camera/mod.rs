@@ -51,9 +51,12 @@ impl Camera {
         let y_iterator = self.position_on_board.y..(self.position_on_board.y + self.screen_size.y);
 
         self.cells_pos = y_iterator
-            .flat_map(move |a| {  (x_iterator.0..x_iterator.1).map(move |b| (a, b))  })
-            .map(|pos| (pos, (pos.0 - self.position_on_board.x, pos.1  - self.position_on_board.y)))
-            .filter(|((x, y), _screen_pos)| x % (self.cell_size * self.zoom_ratio) as usize == 0 && y % (self.cell_size * self.zoom_ratio) as usize == 0)
+            .flat_map(move |a|
+                (x_iterator.0..x_iterator.1).map(move |b| (a, b)))
+            .map(|pos|
+                (pos, (pos.0 - self.position_on_board.x, pos.1  - self.position_on_board.y)))
+            .filter(|((x, y), _screen_pos)|
+                x % (self.cell_size * self.zoom_ratio) as usize == 0 && y % (self.cell_size * self.zoom_ratio) as usize == 0)
             .map(|(pos, screen_pos)|
                 Pixel::new(screen_pos, pos, ((pos.0 as f32 / self.cell_size) as usize, (pos.1 as f32 / self.cell_size) as usize)))
             .collect();
