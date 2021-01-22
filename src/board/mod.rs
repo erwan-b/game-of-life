@@ -6,6 +6,7 @@ use std::collections::VecDeque;
 pub struct Board {
     default_size: usize,
     rows: Vec<Vec<Cell>>,
+    actual: Box<Vec<Cell>>,
     history: VecDeque<Box<Vec<Cell>>>
 }
 
@@ -14,6 +15,7 @@ impl Board {
     /// Construct an empty board
     /// TODO make this more readable
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
+        let mut actual = Box::new(vec![]);
         let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
         let get_status = |x: i64, y: i64| -> Option<STATUS> {
             if x <= 0 && y <= 0 {
@@ -37,13 +39,15 @@ impl Board {
                     None => STATUS::DEAD,
                     Some(status) => status
                 };
-                line.push(Cell::new(x as i32, y as i32, res))
+                let cell = Cell::new(x as i32, y as i32, res);
+                if res.is_alive() { actual.push(cell); }
+                line.push(cell)
             });
 
             rows.push(line);
         });
 
-        Board{default_size: size, rows, history: VecDeque::with_capacity(1001)}
+        Board{default_size: size, rows, actual, history: VecDeque::with_capacity(1001)}
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
@@ -102,26 +106,39 @@ impl Board {
         cell.apply_rules(adj_live_cells)
     }
 
-    /// Apply the game of life rules on a row of the board
-    fn apply_on_row(&self, row: &Vec<Cell>, register_cells: &mut Box<Vec<Cell>>) -> Vec<Cell> {
-        row.iter().map(|cell| {
-            let c = self.apply_on_pos(cell);
-            register_cells.push(c);
-            c
-        }).collect()
-    }
-
     /// Apply the game of life rules on the board
-    pub fn apply_on_all(&mut self) {
-        let mut register_cells  = Box::new(vec![]);
-        {
-            let mut copy_register = register_cells.clone();
-            self.rows = self.rows.iter().map(|row| self.apply_on_row(row, &mut copy_register)).collect();
-        }
+    /// Split the board in 10 x 10 square and check active one
+    pub fn next(&mut self) {
+        let mut res;
+        res = self.actual.iter()
+            .map(|cell| self.apply_on_pos(cell))
+            .filter(|&&elem| elem.is_alive()).collect::<Vec<Cell>>();
 
-        if self.history.len() >= 100 {
+        res = res.iter()
+            .map(|&cell| self.set_cell(cell.x, cell.y, cell.status).unwrap())
+            .filter(|&&elem| elem.is_alive()).collect();
+
+        if self.history.len() >= 10 {
             self.history.pop_back();
         }
-        self.history.push_front(register_cells);
+        self.history.push_front(self.actual.clone());
+        self.actual = Box::new(res);
+    }
+
+    fn apply_prev(&mut self) {
+        self.actual.clone().iter().for_each(|&cell| {
+            self.set_cell(cell.x - 1, cell.y + 1, STATUS::DEAD);
+            self.set_cell(cell.x, cell.y + 1,  STATUS::DEAD);
+            self.set_cell(cell.x + 1, cell.y + 1, STATUS::DEAD);
+            self.set_cell(cell.x + 1, cell.y, STATUS::DEAD);
+            self.set_cell(cell.x, cell.y, cell.status);
+        })
+    }
+
+    pub fn prev(&mut self) {
+        if self.history.len() > 0 {
+            self.actual = self.history.pop_front().unwrap();
+            self.apply_prev();
+        }
     }
 }

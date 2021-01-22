@@ -93,8 +93,15 @@ impl MyGame {
         }
     }
 
+    pub fn prev(&mut self) {
+        if self.constants.turns > 0 {
+            self.board.prev();
+            self.constants.turns -= 1;
+        }
+    }
+
     pub fn next(&mut self) {
-        self.board.apply_on_all();
+        self.board.next();
         self.constants.turns += 1;
     }
 
@@ -155,6 +162,9 @@ impl EventHandler for MyGame {
             self.last_refresh = time::Instant::now();
             self.next();
             self.game_step -= 1;
+        } else if self.game_step < 0 {
+            self.prev();
+            self.game_step += 1;
         }
         Ok(())
     }

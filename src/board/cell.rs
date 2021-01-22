@@ -1,3 +1,4 @@
+use crate::board::cell::STATUS::ALIVE;
 
 /// Define a cell alive or dead
 /// This should not be access by something else than the cell
@@ -34,6 +35,10 @@ impl STATUS {
             self
         }
     }
+
+    pub fn is_alive(self) -> bool {
+        self == ALIVE
+    }
 }
 
 /// Define a cell of the board
@@ -50,9 +55,14 @@ impl Cell {
         Cell{x, y, status}
     }
 
+    pub fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+
+
     /// Is this cell alive
     pub fn is_alive(&self) -> bool {
-        self.status == STATUS::ALIVE
+        self.status.is_alive()
     }
 
     /// Apply the game of life rules on this cell
