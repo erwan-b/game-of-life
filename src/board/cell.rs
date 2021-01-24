@@ -3,7 +3,7 @@ use crate::board::cell::STATUS::ALIVE;
 /// Define a cell alive or dead
 /// This should not be access by something else than the cell
 /// [TODO] Remove the pub
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum STATUS {
     DEAD = 0,
     ALIVE = 1
@@ -43,7 +43,7 @@ impl STATUS {
 
 /// Define a cell of the board
 /// It has a position on it and a status
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Cell {
     pub x: i32,
     pub y: i32,
@@ -54,11 +54,6 @@ impl Cell {
     pub fn new(x: i32, y: i32, status: STATUS) -> Self {
         Cell{x, y, status}
     }
-
-    pub fn eq(&self, other: &Self) -> bool {
-        self.x == other.x && self.y == other.y
-    }
-
 
     /// Is this cell alive
     pub fn is_alive(&self) -> bool {

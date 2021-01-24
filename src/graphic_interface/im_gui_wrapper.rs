@@ -61,11 +61,6 @@ impl ImGuiWrapper {
         }
     }
 
-    fn click_on_button(&mut self, button: UiButton) {
-        println!("click");
-        self.last_button = Some(button);
-    }
-
     // This is what we will call on every render iteration
     // to render the imgui bits on top of our game.
     pub fn render(&mut self, ctx: &mut Context,  hidpi_factor: f32, play: bool) {

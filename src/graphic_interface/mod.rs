@@ -190,9 +190,12 @@ impl EventHandler for MyGame {
         x: f32,
         y: f32,
     ) {
-        let (w, h) = ((x / 16.0) as i32, (y / 16.0) as i32);
-        match self.board.get_cell(w, h) {
-            Some(cell) => self.board.set_cell(w, h, cell.status.inverse()),
+        let (mut w, mut h) = self.camera.board_pos_from_screen_pos((x, y));
+        w = w / 16.0;
+        h = h / 16.0;
+
+        match self.board.get_cell(w as i32, h as i32) {
+            Some(cell) => self.board.set_cell(w as i32, h as i32, cell.status.inverse()),
             _ => None
         };
         self.img_wrapper.update_mouse_pos(x, y);

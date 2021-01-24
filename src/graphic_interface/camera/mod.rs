@@ -62,12 +62,8 @@ impl Camera {
             .collect();
     }
 
-    /// Update the zoom ratio
-    pub fn set_screen_size(&mut self, screen_size: Point2<usize>) -> &Self {
-        self.screen_size = screen_size;
-        self.update_cells_to_show();
-
-        self
+    pub fn board_pos_from_screen_pos(&self, (x, y): (f32, f32)) -> (f32, f32) {
+        (x + self.position_on_board.x as f32, y + self.position_on_board.y as f32)
     }
 
     /// Update the zoom ratio

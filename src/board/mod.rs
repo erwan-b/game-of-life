@@ -4,10 +4,9 @@ use cell::{Cell, STATUS};
 use std::collections::{VecDeque, HashSet};
 
 pub struct Board {
-    default_size: usize,
     rows: Vec<Vec<Cell>>,
-    actual: Box<Vec<Cell>>,
-    history: VecDeque<Box<Vec<Cell>>>
+    actual: Box<HashSet<Cell>>,
+    history: VecDeque<Box<HashSet<Cell>>>
 }
 
 /// Define the board logic
@@ -35,26 +34,30 @@ impl Board {
 
     /// Construct the board from a map
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
-        let mut actual = Box::new(vec![]);
+        let mut actual = Box::new(HashSet::new());
         let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
 
         let rows = (0..size as i64).map(|y| {
             (0..size as i64).map(|x| {
                 let c = Self::get_cell_from_char(size, obj_b.clone(), (x, y));
                 if c.is_alive() {
-                    actual.push(c);
+                    actual.insert(c);
                 }
                 c
             }).collect()
         }).collect();
 
-        Board{default_size: size, rows, actual, history: VecDeque::with_capacity(1001)}
+        Board{rows, actual, history: VecDeque::with_capacity(1001)}
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
         let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
 
         c.status = status;
+
+        if c.is_alive() || self.actual.contains(c) {
+            self.actual.insert(*c);
+        }
         Some(c)
     }
 
@@ -134,13 +137,15 @@ impl Board {
 
 
         self.actual.clone().iter().for_each(|cell| { self.set_cell(cell.x, cell.y, STATUS::DEAD); });
-        res.iter().for_each(|cell| { self.set_cell(cell.x, cell.y, cell.status); });
+        self.history.push_front(self.actual.clone());
+        self.actual = Box::new(HashSet::new());
 
+        res.iter().for_each(|cell| {
+            self.set_cell(cell.x, cell.y, cell.status);
+        });
         if self.history.len() >= 10 {
             self.history.pop_back();
         }
-        self.history.push_front(self.actual.clone());
-        self.actual = Box::new(res);
     }
 
     pub fn prev(&mut self) {
