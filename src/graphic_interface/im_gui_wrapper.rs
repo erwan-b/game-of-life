@@ -27,6 +27,8 @@ pub enum UiButton {
     PREV,
     STOP,
     PLAY,
+    SAVE_MAP,
+    SAVE_INIT_MAP,
 }
 
 pub struct ImGuiWrapper {
@@ -110,10 +112,14 @@ impl ImGuiWrapper {
                     if ui.button(im_str!(">|"),  [20.0, 20.0]) {
                         click_button = Some(UiButton::NEXT);
                     }
-                    ui.text(format!(
-                        "Mouse Position: ({:.1},{:.1})",
-                        mouse_pos[0], mouse_pos[1]
-                    ));
+                    ui.same_line(76.0);
+                    if ui.button(im_str!("Save Map"),  [70.0, 20.0]) {
+                        click_button = Some(UiButton::SAVE_MAP);
+                    }
+                    ui.same_line(155.0);
+                    if ui.button(im_str!("Save init Map"),  [70.0, 20.0]) {
+                        click_button = Some(UiButton::SAVE_INIT_MAP);
+                    }
                 });
             self.last_button = click_button;
             self.time_per_step = Duration::from_millis(slider as u64)

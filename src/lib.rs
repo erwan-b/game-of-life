@@ -9,12 +9,8 @@ use graphic_interface::MyGame;
 
 pub const MAP_SIZE: usize = 200;
 
-pub fn create_file_from_map(board: Box<Board>, _file_path: &str) {
-    let res = (0..=board.nb_row())
-        .map(|elem| board.get_line(elem) + "\n")
-        .collect::<String>();
-
-    fs::write("./map/saved_map.txt", res);
+pub fn create_file_from_map(value: &String, _file_path: &str) {
+    fs::write("./map/saved_map.txt", value);
 }
 
 pub fn create_map_from_file(file_path: &str) -> Box<Board> {

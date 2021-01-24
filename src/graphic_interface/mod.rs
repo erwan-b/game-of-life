@@ -14,6 +14,7 @@ use camera::Camera;
 use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
+use crate::create_file_from_map;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -93,14 +94,22 @@ impl MyGame {
         }
     }
 
-    pub fn prev(&mut self) {
+   fn save_map(&self) {
+       create_file_from_map(&self.board.board_to_string(), "");
+   }
+
+    fn save_init_map(&self) {
+        create_file_from_map(&self.board.initial_board_to_string(), "");
+    }
+
+   fn prev(&mut self) {
         if self.constants.turns > 0 {
             self.board.prev();
             self.constants.turns -= 1;
         }
     }
 
-    pub fn next(&mut self) {
+    fn next(&mut self) {
         self.board.next();
         self.constants.turns += 1;
     }
@@ -139,6 +148,8 @@ impl MyGame {
             Some(UiButton::PREV) => { self.game_step -= 1;}
             Some(UiButton::STOP) => { self.play = false; }
             Some(UiButton::PLAY) => { self.play = true; }
+            Some(UiButton::SAVE_MAP) => { self.save_map(); }
+            Some(UiButton::SAVE_INIT_MAP) => { self.save_init_map(); }
             _ => {}
         }
         self.constants.refresh_rate = self.img_wrapper.get_time_per_step();
@@ -185,11 +196,17 @@ impl EventHandler for MyGame {
     /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
     fn mouse_button_down_event(
         &mut self,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         button: MouseButton,
         x: f32,
         y: f32,
     ) {
+        self.img_wrapper.update_mouse_pos(x, y);
+        self.img_wrapper.update_mouse_down(button);
+        let (w, h) = graphics::size(ctx);
+        if y >= h - 100.0 {
+            return
+        }
         let (mut w, mut h) = self.camera.board_pos_from_screen_pos((x, y));
         w = w / 16.0;
         h = h / 16.0;
@@ -198,8 +215,6 @@ impl EventHandler for MyGame {
             Some(cell) => self.board.set_cell(w as i32, h as i32, cell.status.inverse()),
             _ => None
         };
-        self.img_wrapper.update_mouse_pos(x, y);
-        self.img_wrapper.update_mouse_down(button);
     }
 
     fn mouse_button_up_event(

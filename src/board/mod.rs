@@ -2,11 +2,13 @@ pub mod cell;
 
 use cell::{Cell, STATUS};
 use std::collections::{VecDeque, HashSet};
+use std::ops::Add;
 
 pub struct Board {
     rows: Vec<Vec<Cell>>,
     actual: Box<HashSet<Cell>>,
-    history: VecDeque<Box<HashSet<Cell>>>
+    history: VecDeque<Box<HashSet<Cell>>>,
+    initial_state: Box<HashSet<Cell>>,
 }
 
 /// Define the board logic
@@ -47,7 +49,38 @@ impl Board {
             }).collect()
         }).collect();
 
-        Board{rows, actual, history: VecDeque::with_capacity(1001)}
+        Board{rows, actual: actual.clone(), initial_state: actual.clone(), history: VecDeque::with_capacity(10000)}
+    }
+
+    fn active_cell_to_string(mut cells: Box<HashSet<Cell>>) -> String {
+        let res = cells.iter().filter(|&cell| cell.is_alive()).copied().collect::<HashSet<Cell>>();
+        cells = Box::from(res);
+
+        let s_x = cells.iter().min_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+        let s_y = cells.iter().min_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+        let b_x = cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+        let b_y = cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+
+        (s_y.y..(b_y.y + 1)).fold(String::new(), |mut s, y| {
+            let mut line = (s_x.x..(b_x.x + 1)).map(|x| {
+                if cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
+                    '1'
+                } else {
+                    '0'
+                }
+            }).collect::<String>().add("\n");
+
+            s.add(&line)
+        })
+    }
+
+    pub fn board_to_string(&self) -> String {
+        Self::active_cell_to_string(self.actual.clone())
+    }
+
+
+    pub fn initial_board_to_string(&self) -> String {
+        Self::active_cell_to_string(self.initial_state.clone())
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
