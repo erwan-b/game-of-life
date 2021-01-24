@@ -12,40 +12,41 @@ pub struct Board {
 
 /// Define the board logic
 impl Board {
-    /// Construct an empty board
-    /// TODO make this more readable
+    fn get_status_or_dead(x: i64, y: i64, obj_b: &Vec<Vec<char>>) -> Option<STATUS>{
+        if x <= 0 && y <= 0 {
+            None
+        } else {
+            let &c = obj_b.get(y as usize)?.get(x as usize)?;
+            Some(STATUS::get_from_char(c))
+        }
+    }
+
+    fn get_cell_from_char(size: usize, obj_b: Vec<Vec<char>>, (x, y): (i64, i64)) -> Cell {
+        let res = match Board::get_status_or_dead(
+            ((size / 2) - obj_b.len() / 2) as i64 - x,
+            ((size / 2) - obj_b.len() / 2) as i64 - y,
+            &obj_b
+        ) {
+            None => STATUS::DEAD,
+            Some(status) => status
+        };
+        Cell::new(x as i32, y as i32, res)
+    }
+
+    /// Construct the board from a map
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
         let mut actual = Box::new(vec![]);
         let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
-        let get_status = |x: i64, y: i64| -> Option<STATUS> {
-            if x <= 0 && y <= 0 {
-                None
-            } else {
-                let &c = obj_b.get(y as usize)?.get(x as usize)?;
-                Some(STATUS::get_from_char(c))
-            }
-        };
 
-        let mut rows = Vec::with_capacity(size);
-
-        (0..size as i64).for_each(|y| {
-            let mut line: Vec<Cell> = Vec::with_capacity(size);
-
-            (0..size as i64).for_each(|x| {
-                let res = match get_status(
-                    ((size / 2) - (obj.len() / 2)) as i64 - x,
-                    ((size / 2) - (obj.len() / 2)) as i64 - y
-                ) {
-                    None => STATUS::DEAD,
-                    Some(status) => status
-                };
-                let cell = Cell::new(x as i32, y as i32, res);
-                if res.is_alive() { actual.push(cell); }
-                line.push(cell)
-            });
-
-            rows.push(line);
-        });
+        let rows = (0..size as i64).map(|y| {
+            (0..size as i64).map(|x| {
+                let c = Self::get_cell_from_char(size, obj_b.clone(), (x, y));
+                if c.is_alive() {
+                    actual.push(c);
+                }
+                c
+            }).collect()
+        }).collect();
 
         Board{default_size: size, rows, actual, history: VecDeque::with_capacity(1001)}
     }
@@ -70,12 +71,10 @@ impl Board {
         self.rows.get(x).unwrap()
     }
 
-    /// Get cell from a specific position on the board
     pub fn get_cell(&self, x: i32, y: i32) -> Option<&Cell> {
         self.rows.get(y as usize)?.get(x as usize)
     }
 
-    /// Get cell from a specific position on the board
     pub fn get_cell_or_dead(&self, x: i32, y: i32) -> Cell {
         match self.get_cell(x, y) {
             None => Cell::new(0, 0, STATUS::DEAD),
@@ -105,6 +104,9 @@ impl Board {
         cell.apply_rules(adj_live_cells)
     }
 
+    /// Calculate the active zone on the board.
+    /// There are 10x10 big and we get them by iterating on the actually activate cell
+    /// At the end we are adding the boarding zone and remove duplicates
     fn get_actual_interest_zone(&self) -> HashSet<(usize, usize)>{
         self.actual.iter()
             .map(|cell| (cell.x as usize / 10, cell.y as usize / 10))
@@ -121,7 +123,8 @@ impl Board {
     }
 
     /// Apply the game of life rules on the board
-    /// Split the board in 10 x 10 square and check active one
+    /// Get 10x10 interesting zones and pass the rules on it
+    /// TODO, getting the active cells instead of zones will add a lot of complexity ?
     pub fn next(&mut self) {
         let res = self.get_actual_interest_zone().iter()
             .map(|&(x, y)| self.get_cell_or_dead(x as i32, y as i32))
