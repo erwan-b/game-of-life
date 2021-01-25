@@ -38,7 +38,9 @@ pub struct ImGuiWrapper {
     last_frame: Instant,
     mouse_state: MouseState,
     last_button: Option<UiButton>,
-    time_per_step: Duration
+
+    time_per_step: Duration,
+    zoom_ratio: f32
 }
 
 
@@ -59,7 +61,10 @@ impl ImGuiWrapper {
             last_frame: Instant::now(),
             mouse_state: MouseState::default(),
             last_button: None,
-            time_per_step: Duration::new(1, 0)
+
+            // Slider valeuses
+            time_per_step: Duration::new(1, 0),
+            zoom_ratio: 1.0
         }
     }
 
@@ -81,10 +86,9 @@ impl ImGuiWrapper {
         let ui = self.imgui.frame();
         {
             let mut slider = self.time_per_step.as_millis() as u64;
-            let s = Slider::new(
-                im_str!("step time, in millisecond"),
-                RangeInclusive::new(0, 2000)
-            );
+            let mut zoom_ratio = self.zoom_ratio;
+            let slider_milli = Slider::new(im_str!("step time, in millisecond"), RangeInclusive::new(0, 2000));
+            let slider_zoom = Slider::new(im_str!("zoom"), RangeInclusive::new(0.0, 2.0));
 
             let mut click_button = None;
             let (w, h) = graphics::size(ctx);
@@ -95,9 +99,9 @@ impl ImGuiWrapper {
                 .resizable(false).size([w, 100.0], Condition::Always)
                 .position([0.0, h - 100.0], Condition::Always)
                 .build(&ui, || {
-                    s.build(&ui, &mut slider);
+                    slider_milli.build(&ui, &mut slider);
+                    slider_zoom.build(&ui, &mut zoom_ratio);
                     ui.separator();
-                    let mouse_pos = ui.io().mouse_pos;
                     if ui.button(im_str!("|<"),  [20.0, 20.0]) {
                         click_button = Some(UiButton::PREV);
                     }
@@ -122,7 +126,8 @@ impl ImGuiWrapper {
                     }
                 });
             self.last_button = click_button;
-            self.time_per_step = Duration::from_millis(slider as u64)
+            self.time_per_step = Duration::from_millis(slider as u64);
+            self.zoom_ratio = zoom_ratio;
         }
 
         // Render
@@ -132,6 +137,10 @@ impl ImGuiWrapper {
                 &mut RenderTargetView::new(render_target.clone()),
                 draw_data).unwrap();
 
+    }
+
+    pub fn get_zoom_ratio(&self) -> f32 {
+        self.zoom_ratio
     }
 
     pub fn get_time_per_step(&self) -> Duration {

@@ -160,7 +160,7 @@ impl Board {
 
     /// Apply the game of life rules on the board
     /// Get 10x10 interesting zones and pass the rules on it
-    /// TODO, getting the active cells instead of zones will add a lot of complexity ?
+    /// TODO, getting the active cells instead of zones will add a lot of complexity ???
     pub fn next(&mut self) {
         let res = self.get_actual_interest_zone().iter()
             .map(|&(x, y)| self.get_cell_or_dead(x as i32, y as i32))

@@ -59,7 +59,7 @@ impl MyGame {
     }
 
     fn create_cell_mesh(ctx: &mut Context, camera: &Camera) -> graphics::Mesh {
-        let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, camera.cell_size, camera.cell_size);
+        let cell_mesh_rect = graphics::Rect::new(0.0, 0.0, camera.get_cell_size(), camera.get_cell_size());
 
         match graphics::Mesh::new_rectangle(
             ctx,
@@ -77,13 +77,13 @@ impl MyGame {
         let pos = board.nb_row() / 2 - 10;
         let (line_h, line_w) = MyGame::create_line_mesh(ctx);
 
-        let camera = Camera::new(Point2{x: pos, y: pos}, Point2{x: w as usize, y: h as usize});
+        let camera = Camera::new(Point2{x: pos as f32, y: pos as f32}, Point2{x: w , y: h});
         let img = ImGuiWrapper::new(ctx);
 
         MyGame {
             board,
             constants: Constants::new(Duration::new(1, 0)),
-            cell_mesh: MyGame::create_cell_mesh(ctx, &camera),
+            cell_mesh: Self::create_cell_mesh(ctx, &camera),
             img_wrapper: img,
             line_h,
             line_w,
@@ -116,29 +116,31 @@ impl MyGame {
 
     /// Draw each line limitation of the board
     fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
-        self.camera.size_shown_iter().filter(|&pixel| pixel.screen_pos.x ==  0)
-        .fold(Ok(()), | _acc, pixel|{
-            graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.y as f32, y: 0.0 }, ))?;
-            graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: pixel.screen_pos.y as f32 }, ))
-        })
+        self.camera.size_shown_iter()
+            .filter(|&pixel| self.camera.get_cell_size() > pixel.screen_pos.x)
+            .fold(Ok(()), | _acc, pixel|{
+                graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.y, y: 0.0 }, ))?;
+                graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: pixel.screen_pos.y }, ))
+            })
     }
 
     /// Draw the living cells on the board
     fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
         self.camera.size_shown_iter()
             .filter_map(|pixel|
-                if self.board.get_cell_or_dead(
-                    (pixel.board_pixel_pos.x as f32 / self.camera.cell_size) as i32,
-                    (pixel.board_pixel_pos.y as f32 / self.camera.cell_size) as i32,).is_alive() {
+                if self.board.get_cell_or_dead(pixel.board_pos.x as i32,
+                                               pixel.board_pos.y as i32).is_alive() {
                     Some(pixel)
                 } else {
                     None
                 })
             .fold(Ok(()), | _acc, pixel| {
-                graphics::draw(ctx, &self.cell_mesh, graphics::DrawParam::default().dest(Point2 {
-                    x: pixel.screen_pos.x as f32,
-                    y: pixel.screen_pos.y as f32
-                }))
+                graphics::draw(
+                    ctx, &self.cell_mesh,
+                    graphics::DrawParam::default().dest(Point2 {
+                        x: pixel.screen_pos.x as f32,
+                        y: pixel.screen_pos.y as f32
+                    }))
             })
     }
 
@@ -160,8 +162,7 @@ impl MyGame {
 impl EventHandler for MyGame {
     /// Update the cells there.
     /// There for we call the board function that return a new one with the rules applied on all cells.
-    /// TODO may be put the update part in a thread so we can have a huge board
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         self.update_button();
 
         let duration = time::Instant::now() - self.last_refresh;
@@ -182,10 +183,13 @@ impl EventHandler for MyGame {
 
     /// Draw the board on the screen.
     /// The defined size of the cells we be translate to showed size with de zoom ratio
-    /// TODO The draw take a lot of CPU  !!!!
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::WHITE);
 
+        if self.camera.get_zoom_ratio() != self.img_wrapper.get_zoom_ratio() {
+            self.camera.set_zoom_ratio(self.img_wrapper.get_zoom_ratio());
+            self.cell_mesh = Self::create_cell_mesh(ctx, &self.camera);
+        }
         self.draw_board(ctx)?;
         self.draw_line(ctx)?;
         self.img_wrapper.render(ctx, 2.0, self.play);
@@ -207,9 +211,7 @@ impl EventHandler for MyGame {
         if y >= h - 100.0 {
             return
         }
-        let (mut w, mut h) = self.camera.board_pos_from_screen_pos((x, y));
-        w = w / 16.0;
-        h = h / 16.0;
+        let  (w, h) = self.camera.board_pos_from_screen_pos((x, y));
 
         match self.board.get_cell(w as i32, h as i32) {
             Some(cell) => self.board.set_cell(w as i32, h as i32, cell.status.inverse()),
