@@ -143,18 +143,23 @@ impl Board {
     /// Calculate the active zone on the board.
     /// There are 10x10 big and we get them by iterating on the actually activate cell
     /// At the end we are adding the boarding zone and remove duplicates
-    fn get_actual_interest_zone(&self) -> HashSet<(usize, usize)>{
+    fn get_actual_interest_zone(&self) -> HashSet<&Cell>{
         self.actual.iter()
             .map(|cell| (cell.x as usize / 10, cell.y as usize / 10))
             .flat_map(|elem| {
-                ((elem.1 - 1)..(elem.1 + 2)).flat_map(move |a| {
-                    ((elem.0 - 1)..(elem.0 + 2)).map( move |b| (b, a))
+                let mut begin_y = if elem.1 != 0 { elem.1 - 1 } else { elem.1};
+                let mut begin_x = if elem.0 != 0 { elem.0 - 1 } else { elem.0 };
+
+                (begin_y..(elem.1 + 2)).flat_map(move |y| {
+                    (begin_x..(elem.0 + 2)).map( move |x| (x, y))
                 })
             })
             .collect::<HashSet<(usize, usize)>>().iter()
             .map(|&elem| (elem.0 * 10, elem.1 * 10))
             .flat_map(|(x, y)|
-                (y..(y + 10)).flat_map(move |a| (x..(x + 10)).map(move |b| (b, a)))
+                (y..(y + 10)).flat_map(move |a|
+                    (x..(x + 10)).filter_map(move |b| self.get_cell(b as i32, a as i32))
+                )
             ).collect()
     }
 
@@ -163,8 +168,7 @@ impl Board {
     /// TODO, getting the active cells instead of zones will add a lot of complexity ???
     pub fn next(&mut self) {
         let res = self.get_actual_interest_zone().iter()
-            .map(|&(x, y)| self.get_cell_or_dead(x as i32, y as i32))
-            .map(|cell| self.apply_on_pos(&cell))
+            .map(|&cell| self.apply_on_pos(&cell))
             .filter(|cell| cell.is_alive())
             .collect::<Vec<Cell>>();
 
