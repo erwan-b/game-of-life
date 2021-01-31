@@ -15,6 +15,7 @@ use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
 use crate::create_file_from_map;
+use ggez::conf::WindowMode;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -39,9 +40,8 @@ pub struct MyGame {
 /// The impl is here to define our graphic_interface logic called by the `EventHandler`
 /// It important to kipp it split from the the rest
 impl MyGame {
-    pub fn create_line_mesh(ctx: &mut Context) -> (graphics::Mesh, graphics::Mesh) {
+    pub fn create_line_mesh(ctx: &mut Context, w: f32, h: f32) -> (graphics::Mesh, graphics::Mesh) {
         let color = [0.3, 0.3, 0.3, 1.0].into();
-        let (w, h) = graphics::size(ctx);
 
 
         let line_h = graphics::Mesh::new_line(
@@ -75,7 +75,7 @@ impl MyGame {
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
         let (w, h) = graphics::size(ctx);
         let pos = board.nb_row() / 2 - 10;
-        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
+        let (line_h, line_w) = MyGame::create_line_mesh(ctx, w, h);
 
         let camera = Camera::new(Point2{x: pos as f32, y: pos as f32}, Point2{x: w , y: h});
         let img = ImGuiWrapper::new(ctx);
@@ -200,13 +200,25 @@ impl EventHandler for MyGame {
     /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
     fn mouse_button_down_event(
         &mut self,
-        ctx: &mut Context,
+        _ctx: &mut Context,
         button: MouseButton,
         x: f32,
         y: f32,
     ) {
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        self.img_wrapper.update_mouse_pos(x, y);
+        self.img_wrapper.update_mouse_up(button);
+
         let (_w, h) = graphics::size(ctx);
         if y >= h - 100.0 {
             return
@@ -219,17 +231,6 @@ impl EventHandler for MyGame {
         };
     }
 
-    fn mouse_button_up_event(
-        &mut self,
-        _ctx: &mut Context,
-        button: MouseButton,
-        x: f32,
-        y: f32,
-    ) {
-        self.img_wrapper.update_mouse_pos(x, y);
-        self.img_wrapper.update_mouse_up(button);
-    }
-
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
         self.img_wrapper.update_mouse_pos(x, y);
     }
@@ -239,8 +240,10 @@ impl EventHandler for MyGame {
     }
 
     /// Called when the user resizes the window, or when it is resized
-    fn resize_event(&mut self, ctx: &mut Context, _w: f32, _h: f32) {
-        let (line_h, line_w) = MyGame::create_line_mesh(ctx);
+    fn resize_event(&mut self, ctx: &mut Context, w: f32, h: f32) {
+        graphics::set_screen_coordinates(ctx, graphics::Rect{x: 0.0, y: 0.0, w, h}).unwrap();
+
+        let (line_h, line_w) = MyGame::create_line_mesh(ctx, w, h);
         self.line_h = line_h;
         self.line_w = line_w;
     }
