@@ -162,7 +162,7 @@ impl MyGame {
 impl EventHandler for MyGame {
     /// Update the cells there.
     /// There for we call the board function that return a new one with the rules applied on all cells.
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         self.update_button();
 
         let duration = time::Instant::now() - self.last_refresh;
@@ -207,7 +207,7 @@ impl EventHandler for MyGame {
     ) {
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
-        let (w, h) = graphics::size(ctx);
+        let (_w, h) = graphics::size(ctx);
         if y >= h - 100.0 {
             return
         }

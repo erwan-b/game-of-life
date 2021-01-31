@@ -61,8 +61,8 @@ impl Board {
         let b_x = cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
         let b_y = cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
 
-        (s_y.y..(b_y.y + 1)).fold(String::new(), |mut s, y| {
-            let mut line = (s_x.x..(b_x.x + 1)).map(|x| {
+        (s_y.y..(b_y.y + 1)).fold(String::new(), | s, y| {
+            let line = (s_x.x..(b_x.x + 1)).map(|x| {
                 if cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
                     '1'
                 } else {

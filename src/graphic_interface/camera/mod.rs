@@ -74,7 +74,8 @@ impl Camera {
     }
 
     pub fn board_pos_from_screen_pos(&self, (x, y): (f32, f32)) -> (f32, f32) {
-        (x + self.position_on_board.x as f32, y + self.position_on_board.y as f32)
+        ((x + self.position_on_board_pixel.x as f32) / self.cell_size,
+         (y + self.position_on_board_pixel.y as f32) / self.cell_size)
     }
 
     pub fn set_zoom_ratio(&mut self, zoom_ratio: f32) -> &Self {
