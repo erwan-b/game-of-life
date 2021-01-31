@@ -53,34 +53,36 @@ impl Camera {
         let x_iterator = (self.position_on_board_pixel.x as i32, (self.position_on_board_pixel.x + self.screen_size.x) as i32);
         let y_iterator = self.position_on_board_pixel.y as i32..(self.position_on_board_pixel.y + self.screen_size.y) as i32;
 
-        self.cells_pos = y_iterator.flat_map(move |a|
-                (x_iterator.0..x_iterator.1).map(move |b| (a as f32, b as f32))
+        self.cells_pos = y_iterator.flat_map(move |y|
+                (x_iterator.0..x_iterator.1).map(move |x| ( x as f32,  y as f32))
             )
             .map(|pos|
                 (pos,
                 (pos.0 - self.position_on_board_pixel.x, pos.1  - self.position_on_board_pixel.y))
             )
             .filter(|((x, y), _screen_pos)|
-                (x % (self.cell_size * self.zoom_ratio)) as i32 == 0 && (y % (self.cell_size * self.zoom_ratio)) as i32 == 0
+                (x % self.get_cell_size()) as i32 == 0 && (y % self.get_cell_size()) as i32 == 0
             )
             .map(|(board_pixel_pos, screen_pos)|
-                Pixel::new(screen_pos,
-                           board_pixel_pos,
-                    (board_pixel_pos.0 / (self.cell_size * self.zoom_ratio),
-                     board_pixel_pos.1 / (self.cell_size * self.zoom_ratio))
+                Pixel::new(screen_pos, board_pixel_pos,
+                    (board_pixel_pos.0 / self.get_cell_size(),
+                     board_pixel_pos.1 / self.get_cell_size())
                 )
             )
             .collect();
     }
 
     pub fn board_pos_from_screen_pos(&self, (x, y): (f32, f32)) -> (f32, f32) {
-        ((x + self.position_on_board_pixel.x as f32) / self.cell_size,
-         (y + self.position_on_board_pixel.y as f32) / self.cell_size)
+        ((x + self.position_on_board_pixel.x as f32) / self.get_cell_size(),
+         (y + self.position_on_board_pixel.y as f32) / self.get_cell_size())
     }
 
     pub fn set_zoom_ratio(&mut self, zoom_ratio: f32) -> &Self {
         self.zoom_ratio = zoom_ratio;
-        self.position_on_board_pixel = Point2{x: self.position_on_board.x * self.cell_size * self.zoom_ratio, y: self.position_on_board.y * self.cell_size * self.zoom_ratio};
+        self.position_on_board_pixel = Point2{
+            x: self.position_on_board.x * self.get_cell_size(),
+            y: self.position_on_board.y * self.get_cell_size()
+        };
         self.update_cells_to_show();
 
         self
