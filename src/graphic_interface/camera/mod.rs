@@ -52,17 +52,15 @@ impl Camera {
     fn update_cells_to_show(&mut self) {
         let x_iterator = (self.position_on_board_pixel.x as i32, (self.position_on_board_pixel.x + self.screen_size.x) as i32);
         let y_iterator = self.position_on_board_pixel.y as i32..(self.position_on_board_pixel.y + self.screen_size.y) as i32;
+        let size = self.get_cell_size() as usize;
 
-        self.cells_pos = y_iterator.flat_map(move |y|
-                (x_iterator.0..x_iterator.1).map(move |x| ( x as f32,  y as f32))
+        self.cells_pos = y_iterator.step_by(size).flat_map(move |y|
+                (x_iterator.0..x_iterator.1).step_by(size).map(move |x| ( x as f32,  y as f32))
             )
-            .map(|pos|
-                (pos,
-                (pos.0 - self.position_on_board_pixel.x, pos.1  - self.position_on_board_pixel.y))
-            )
-            .filter(|((x, y), _screen_pos)|
-                (x % self.get_cell_size()) as i32 == 0 && (y % self.get_cell_size()) as i32 == 0
-            )
+            .map(|pos| (
+                pos,
+                (pos.0 - self.position_on_board_pixel.x, pos.1  - self.position_on_board_pixel.y)
+            ))
             .map(|(board_pixel_pos, screen_pos)|
                 Pixel::new(screen_pos, board_pixel_pos,
                     (board_pixel_pos.0 / self.get_cell_size(),
@@ -96,12 +94,13 @@ impl Camera {
         self.cell_size * self.zoom_ratio
     }
 
-    /// Set the top left pixel position on the board
-    pub fn set_pos(&mut self, pos: Point2<f32>) -> &Self {
-        self.position_on_board = pos;
-        self.update_cells_to_show();
+    pub fn move_pos(&mut self, to_add: Point2<f32>) {
+        self.position_on_board_pixel.x -= to_add.x;
+        self.position_on_board_pixel.y -= to_add.y;
 
-        self
+        self.position_on_board.x = self.position_on_board_pixel.x / self.get_cell_size();
+        self.position_on_board.y = self.position_on_board_pixel.y / self.get_cell_size();
+        self.update_cells_to_show();
     }
 
     /// Return an iterator that go throw all board cells to show

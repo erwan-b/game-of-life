@@ -15,7 +15,6 @@ use im_gui_wrapper::ImGuiWrapper;
 use std::time::Duration;
 use crate::graphic_interface::im_gui_wrapper::UiButton;
 use crate::create_file_from_map;
-use ggez::conf::WindowMode;
 
 /// `MyGame` describe the game graphic_interface logic
 /// It contain:
@@ -32,6 +31,8 @@ pub struct MyGame {
     line_h: graphics::Mesh,
     line_w: graphics::Mesh,
 
+    is_clicking: bool,
+    frame_click_pos:  Point2<f32>,
     last_refresh : time::Instant,
     game_step: i64,
     play: bool
@@ -88,21 +89,23 @@ impl MyGame {
             line_h,
             line_w,
             camera,
+            frame_click_pos: Point2{x: 0.0, y: 0.0},
+            is_clicking: false,
             play: false,
             game_step: 0,
             last_refresh: time::Instant::now()
         }
     }
 
-   fn save_map(&self) {
-       create_file_from_map(&self.board.board_to_string(), "");
-   }
+    fn save_map(&self) {
+        create_file_from_map(&self.board.board_to_string(), "");
+    }
 
     fn save_init_map(&self) {
         create_file_from_map(&self.board.initial_board_to_string(), "");
     }
 
-   fn prev(&mut self) {
+    fn prev(&mut self) {
         if self.constants.turns > 0 {
             self.board.prev();
             self.constants.turns -= 1;
@@ -116,10 +119,11 @@ impl MyGame {
 
     /// Draw each line limitation of the board
     fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
+        let size = self.camera.get_cell_size();
         self.camera.size_shown_iter()
-            .filter(|&pixel| self.camera.get_cell_size() > pixel.screen_pos.x)
+            .filter(|&pixel| pixel.screen_pos.x  < size || pixel.screen_pos.y < size)
             .fold(Ok(()), | _acc, pixel|{
-                graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.y, y: 0.0 }, ))?;
+                graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.x, y: 0.0 }, ))?;
                 graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: pixel.screen_pos.y }, ))
             })
     }
@@ -207,6 +211,7 @@ impl EventHandler for MyGame {
     ) {
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
+        self.is_clicking = true;
     }
 
     fn mouse_button_up_event(
@@ -229,10 +234,16 @@ impl EventHandler for MyGame {
             Some(cell) => self.board.set_cell(w as i32, h as i32, cell.status.inverse()),
             _ => None
         };
+        self.is_clicking = false;
     }
 
-    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
+    fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) {
         self.img_wrapper.update_mouse_pos(x, y);
+        let (_w, h) = graphics::size(ctx);
+
+        if self.is_clicking && y <= h - 100.0 {
+            self.camera.move_pos(Point2{x: dx, y: dy});
+        }
     }
 
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
