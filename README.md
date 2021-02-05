@@ -20,3 +20,5 @@ The soft should manage high number of cells at the same time, show and not shown
 ```shell
 cargo run -- ./map/base.map
 ```
+
+![image](https://github.com/erwan-b/game-of-life/blob/master/assets/video-2657673-f3f0a5dca97743f62e036ca605c35780.gif)
