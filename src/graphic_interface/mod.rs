@@ -119,33 +119,20 @@ impl MyGame {
 
     /// Draw each line limitation of the board
     fn draw_line(&self, ctx: &mut Context) -> GameResult<()> {
-        let size = self.camera.get_cell_size();
-        self.camera.size_shown_iter()
-            .filter(|&pixel| pixel.screen_pos.x  < size || pixel.screen_pos.y < size)
+        self.camera.line_to_show().iter()
             .fold(Ok(()), | _acc, pixel|{
-                graphics::draw(ctx, &self.line_w, (Point2 { x: pixel.screen_pos.x, y: 0.0 }, ))?;
-                graphics::draw(ctx, &self.line_h, (Point2 { x: 0.0, y: pixel.screen_pos.y }, ))
+                graphics::draw(ctx, &self.line_w, ( pixel.screen_pos, ))?;
+                graphics::draw(ctx, &self.line_h, ( pixel.screen_pos, ))
             })
     }
 
     /// Draw the living cells on the board
     fn draw_board(&self, ctx: &mut Context) -> GameResult<()> {
-        self.camera.size_shown_iter()
-            .filter_map(|pixel|
-                if self.board.get_cell_or_dead(pixel.board_pos.x as i32,
-                                               pixel.board_pos.y as i32).is_alive() {
-                    Some(pixel)
-                } else {
-                    None
-                })
-            .fold(Ok(()), | _acc, pixel| {
-                graphics::draw(
-                    ctx, &self.cell_mesh,
-                    graphics::DrawParam::default().dest(Point2 {
-                        x: pixel.screen_pos.x as f32,
-                        y: pixel.screen_pos.y as f32
-                    }))
-            })
+        self.camera.active_cells_to_show(self.board.get_leaving_cells()).iter()
+            .fold(Ok(()), | _acc, pixel|
+                graphics::draw(ctx, &self.cell_mesh,
+                    graphics::DrawParam::default().dest(pixel.screen_pos))
+            )
     }
 
     fn update_button(&mut self) {
@@ -204,13 +191,18 @@ impl EventHandler for MyGame {
     /// We need to track the mouse event to set a cell alive if the mouse is click on a valid cell.
     fn mouse_button_down_event(
         &mut self,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         button: MouseButton,
         x: f32,
         y: f32,
     ) {
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_down(button);
+
+        let (_w, h) = graphics::size(ctx);
+        if y >= h - 100.0 {
+            return
+        }
         self.is_clicking = true;
     }
 

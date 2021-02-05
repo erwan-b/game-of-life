@@ -52,18 +52,18 @@ impl Board {
         Board{rows, actual: actual.clone(), initial_state: actual.clone(), history: VecDeque::with_capacity(10000)}
     }
 
-    fn active_cell_to_string(mut cells: Box<HashSet<Cell>>) -> String {
+    fn cells_to_string(cells: &Box<HashSet<Cell>>) -> String {
         let res = cells.iter().filter(|&cell| cell.is_alive()).copied().collect::<HashSet<Cell>>();
-        cells = Box::from(res);
+        let c_cells = Box::from(res);
 
-        let s_x = cells.iter().min_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
-        let s_y = cells.iter().min_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
-        let b_x = cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
-        let b_y = cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+        let s_x = c_cells.iter().min_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+        let s_y = c_cells.iter().min_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+        let b_x = c_cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+        let b_y = c_cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
 
         (s_y.y..(b_y.y + 1)).map(|y| {
             (s_x.x..(b_x.x + 1)).map(|x| {
-                if cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
+                if c_cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
                     STATUS::ALIVE.get_char()
                 } else {
                     STATUS::DEAD.get_char()
@@ -73,12 +73,12 @@ impl Board {
     }
 
     pub fn board_to_string(&self) -> String {
-        Self::active_cell_to_string(self.actual.clone())
+        Self::cells_to_string(&self.actual)
     }
 
 
     pub fn initial_board_to_string(&self) -> String {
-        Self::active_cell_to_string(self.initial_state.clone())
+        Self::cells_to_string(&self.initial_state)
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
@@ -94,11 +94,6 @@ impl Board {
 
     pub fn nb_row(&self) -> usize {
         self.rows.len()
-    }
-
-    pub fn get_line(&self, index: usize) -> String {
-        self.rows.get(index).unwrap().iter()
-            .map(|cell| cell.status.get_char()).collect()
     }
 
     pub fn get_row(&self, x: usize) -> &Vec<Cell> {
@@ -138,9 +133,7 @@ impl Board {
         cell.apply_rules(adj_live_cells)
     }
 
-    /// Calculate the active zone on the board.
-    /// There are 10x10 big and we get them by iterating on the actually activate cell
-    /// At the end we are adding the boarding zone and remove duplicates
+    /// Get all active cells on the board
     fn get_actual_interest_cell(&self) -> HashSet<Cell>{
         self.actual.iter()
             .flat_map(|cell| self.get_adj_cells(cell))
@@ -148,7 +141,6 @@ impl Board {
     }
 
     /// Apply the game of life rules on the board
-    /// Get 10x10 interesting zones and pass the rules on it
     pub fn next(&mut self) {
         let res = self.get_actual_interest_cell().iter()
             .map(|&cell| self.apply_on_pos(&cell))
@@ -173,5 +165,9 @@ impl Board {
             self.actual = self.history.pop_front().unwrap();
             self.actual.clone().iter().for_each(|&cell| { self.set_cell(cell.x, cell.y, cell.status); })
         }
+    }
+
+    pub fn get_leaving_cells(&self) -> &Box<HashSet<Cell>>{
+       &self.actual
     }
 }
