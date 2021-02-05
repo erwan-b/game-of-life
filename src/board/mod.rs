@@ -74,6 +74,11 @@ impl Board {
     }
 
     #[inline]
+    pub fn get_size(&self) -> (usize, usize) {
+        (self.rows.len(), self.rows[0].len())
+    }
+
+    #[inline]
     pub fn get_leaving_cells(&self) -> &Box<HashSet<Cell>> {
         &self.actual
     }
@@ -88,10 +93,23 @@ impl Board {
         cells_to_string(&self.initial_state)
     }
 
+    #[inline]
+    pub fn get_cell(&self, x: i32, y: i32) -> Option<&Cell> {
+        self.rows.get(y as usize)?.get(x as usize)
+    }
+
+    #[inline]
+    pub fn get_cell_or_dead(&self, x: i32, y: i32) -> Cell {
+        match self.get_cell(x, y) {
+            None => Cell::new(0, 0, STATUS::DEAD),
+            Some(&cell) => cell
+        }
+    }
+
     pub fn inverse_cell(&mut self, x: i32, y: i32) -> Option<&Cell> {
         let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
 
-        if c.is_alive() {
+        if !c.is_alive() {
             c.status = c.status.inverse();
             self.actual.insert(*c);
         } else {
@@ -104,33 +122,17 @@ impl Board {
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
         let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
 
-        {
+        if c.status == status {
+            Some(c)
+        } else {
+            c.status = status;
+
             if status.is_alive() {
-                c.status = status;
-                self.actual.insert(*c);
+            self.actual.insert(*c);
             } else {
-                self.actual.remove(c);
-                c.status = status;
+            self.actual.remove(c);
             }
-        }
-        Some(c)
-    }
-
-    #[inline]
-    pub fn get_size(&self) -> (usize, usize) {
-        (self.rows.len(), self.rows[0].len())
-    }
-
-    #[inline]
-    pub fn get_cell(&self, x: i32, y: i32) -> Option<&Cell> {
-        self.rows.get(y as usize)?.get(x as usize)
-    }
-
-    #[inline]
-    pub fn get_cell_or_dead(&self, x: i32, y: i32) -> Cell {
-        match self.get_cell(x, y) {
-            None => Cell::new(0, 0, STATUS::DEAD),
-            Some(&cell) => cell
+            Some(c)
         }
     }
 
@@ -167,7 +169,7 @@ impl Board {
     pub fn next(&mut self) {
         let res = self.get_actual_interest_cell().iter()
             .map(|&cell| self.apply_on_pos(&cell))
-            .filter(|cell| cell.is_alive())
+            .filter(|&cell| cell.is_alive())
             .collect::<Vec<Cell>>();
 
 

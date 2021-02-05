@@ -221,9 +221,7 @@ impl EventHandler for MyGame {
         if y <= h - 100.0 && !self.as_move {
             let  (w, h) = self.camera.board_pos_from_screen_pos((x, y));
 
-            if let Some(cell) = self.board.get_cell(w as i32, h as i32) {
-                self.board.set_cell(w as i32, h as i32, cell.status.inverse());
-            }
+            self.board.inverse_cell(w as i32, h as i32);
         }
         self.as_move = false;
         self.is_clicking = false;
