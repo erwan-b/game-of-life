@@ -13,7 +13,7 @@ pub struct Board {
 
 /// Define the board logic
 impl Board {
-    fn get_status_or_dead(x: i64, y: i64, obj_b: &Vec<Vec<char>>) -> Option<STATUS>{
+    fn get_status_or_dead(x: i64, y: i64, obj_b: &Vec<Vec<char>>) -> Option<STATUS> {
         if x <= 0 && y <= 0 {
             None
         } else {
@@ -61,17 +61,15 @@ impl Board {
         let b_x = cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
         let b_y = cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
 
-        (s_y.y..(b_y.y + 1)).fold(String::new(), | s, y| {
-            let line = (s_x.x..(b_x.x + 1)).map(|x| {
+        (s_y.y..(b_y.y + 1)).map(|y| {
+            (s_x.x..(b_x.x + 1)).map(|x| {
                 if cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
-                    '1'
+                    STATUS::ALIVE.get_char()
                 } else {
-                    '0'
+                    STATUS::DEAD.get_char()
                 }
-            }).collect::<String>().add("\n");
-
-            s.add(&line)
-        })
+            }).collect::<String>().add("\n")
+        }).collect()
     }
 
     pub fn board_to_string(&self) -> String {
