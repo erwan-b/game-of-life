@@ -30,20 +30,14 @@ fn run_game(board: Box<Board>) {
     c.window_mode = c.window_mode.resizable(true);
 
     let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
-        .conf(c)
+        .default_conf(c)
         .build()
         .expect("aieee, could not create ggez context!");
-
-    let hidpi_factor = event_loop.get_primary_monitor().get_hidpi_factor() as f32;
-    println!("{}", hidpi_factor);
 
     let mut my_game = MyGame::new(&mut ctx, board);
 
     // Run!
-    match event::run(&mut ctx, &mut event_loop, &mut my_game) {
-        Ok(_) => println!("Exited cleanly."),
-        Err(e) => println!("Error occured: {}", e)
-    }
+    event::run(ctx, event_loop, my_game)
 }
 
 pub fn load_run(mapfile: &str) {

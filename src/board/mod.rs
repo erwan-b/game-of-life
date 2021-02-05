@@ -84,10 +84,12 @@ impl Board {
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
         let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
 
-        c.status = status;
-
-        if c.is_alive() || self.actual.contains(c) {
+        if status.is_alive() {
+            c.status = status;
             self.actual.insert(*c);
+        } else {
+            self.actual.remove(c);
+            c.status = status;
         }
         Some(c)
     }
