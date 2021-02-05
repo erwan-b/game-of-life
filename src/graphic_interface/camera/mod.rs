@@ -73,7 +73,6 @@ impl Camera {
     pub fn update_line_to_show(&mut self) {
         let x_iterator = self.position_on_board.x as i32..(self.position_on_board.x + self.screen_size.x / self.get_cell_size()) as i32;
         let y_iterator = self.position_on_board.y as i32..(self.position_on_board.y + self.screen_size.y / self.get_cell_size()) as i32;
-        let size = self.get_cell_size() as usize;
 
         self.cells_pos = y_iterator.map(|y| (self.position_on_board.x, y as f32))
             .chain(x_iterator.map(|x| (x as f32, self.position_on_board.y)))

@@ -11,6 +11,27 @@ pub struct Board {
     initial_state: Box<HashSet<Cell>>,
 }
 
+
+fn cells_to_string(cells: &Box<HashSet<Cell>>) -> String {
+    let res = cells.iter().filter(|&cell| cell.is_alive()).copied().collect::<HashSet<Cell>>();
+    let c_cells = Box::from(res);
+
+    let s_x = c_cells.iter().min_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+    let s_y = c_cells.iter().min_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+    let b_x = c_cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
+    let b_y = c_cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
+
+    (s_y.y..(b_y.y + 1)).map(|y| {
+        (s_x.x..(b_x.x + 1)).map(|x| {
+            if c_cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
+                STATUS::ALIVE.get_char()
+            } else {
+                STATUS::DEAD.get_char()
+            }
+        }).collect::<String>().add("\n")
+    }).collect()
+}
+
 /// Define the board logic
 impl Board {
     fn get_status_or_dead(x: i64, y: i64, obj_b: &Vec<Vec<char>>) -> Option<STATUS> {
@@ -52,60 +73,60 @@ impl Board {
         Board{rows, actual: actual.clone(), initial_state: actual.clone(), history: VecDeque::with_capacity(10000)}
     }
 
-    fn cells_to_string(cells: &Box<HashSet<Cell>>) -> String {
-        let res = cells.iter().filter(|&cell| cell.is_alive()).copied().collect::<HashSet<Cell>>();
-        let c_cells = Box::from(res);
-
-        let s_x = c_cells.iter().min_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
-        let s_y = c_cells.iter().min_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
-        let b_x = c_cells.iter().max_by(|&a, &b| a.x.cmp(&b.x)).unwrap();
-        let b_y = c_cells.iter().max_by(|&a, &b| a.y.cmp(&b.y)).unwrap();
-
-        (s_y.y..(b_y.y + 1)).map(|y| {
-            (s_x.x..(b_x.x + 1)).map(|x| {
-                if c_cells.contains(&Cell::new(x, y, STATUS::ALIVE)) {
-                    STATUS::ALIVE.get_char()
-                } else {
-                    STATUS::DEAD.get_char()
-                }
-            }).collect::<String>().add("\n")
-        }).collect()
+    #[inline]
+    pub fn get_leaving_cells(&self) -> &Box<HashSet<Cell>> {
+        &self.actual
     }
 
+    #[inline]
     pub fn board_to_string(&self) -> String {
-        Self::cells_to_string(&self.actual)
+        cells_to_string(&self.actual)
     }
 
-
+    #[inline]
     pub fn initial_board_to_string(&self) -> String {
-        Self::cells_to_string(&self.initial_state)
+        cells_to_string(&self.initial_state)
+    }
+
+    pub fn inverse_cell(&mut self, x: i32, y: i32) -> Option<&Cell> {
+        let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
+
+        if c.is_alive() {
+            c.status = c.status.inverse();
+            self.actual.insert(*c);
+        } else {
+            self.actual.remove(c);
+            c.status = c.status.inverse();
+        }
+        Some(c)
     }
 
     pub fn set_cell(&mut self, x: i32, y: i32, status: STATUS) -> Option<&Cell> {
         let c = self.rows.get_mut(y as usize)?.get_mut(x as usize)?;
 
-        if status.is_alive() {
-            c.status = status;
-            self.actual.insert(*c);
-        } else {
-            self.actual.remove(c);
-            c.status = status;
+        {
+            if status.is_alive() {
+                c.status = status;
+                self.actual.insert(*c);
+            } else {
+                self.actual.remove(c);
+                c.status = status;
+            }
         }
         Some(c)
     }
 
-    pub fn nb_row(&self) -> usize {
-        self.rows.len()
+    #[inline]
+    pub fn get_size(&self) -> (usize, usize) {
+        (self.rows.len(), self.rows[0].len())
     }
 
-    pub fn get_row(&self, x: usize) -> &Vec<Cell> {
-        self.rows.get(x).unwrap()
-    }
-
+    #[inline]
     pub fn get_cell(&self, x: i32, y: i32) -> Option<&Cell> {
         self.rows.get(y as usize)?.get(x as usize)
     }
 
+    #[inline]
     pub fn get_cell_or_dead(&self, x: i32, y: i32) -> Cell {
         match self.get_cell(x, y) {
             None => Cell::new(0, 0, STATUS::DEAD),
@@ -167,9 +188,5 @@ impl Board {
             self.actual = self.history.pop_front().unwrap();
             self.actual.clone().iter().for_each(|&cell| { self.set_cell(cell.x, cell.y, cell.status); })
         }
-    }
-
-    pub fn get_leaving_cells(&self) -> &Box<HashSet<Cell>>{
-       &self.actual
     }
 }

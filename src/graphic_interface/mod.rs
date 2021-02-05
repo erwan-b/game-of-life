@@ -32,7 +32,7 @@ pub struct MyGame {
     line_w: graphics::Mesh,
 
     is_clicking: bool,
-    frame_click_pos:  Point2<f32>,
+    as_move: bool,
     last_refresh : time::Instant,
     game_step: i64,
     play: bool
@@ -75,10 +75,12 @@ impl MyGame {
 
     pub fn new(ctx: &mut Context, board: Box<Board>) -> Self {
         let (w, h) = graphics::size(ctx);
-        let pos = board.nb_row() / 2 - 10;
+        let (board_h, board_w) = board.get_size();
         let (line_h, line_w) = MyGame::create_line_mesh(ctx, w, h);
 
-        let camera = Camera::new(Point2{x: pos as f32, y: pos as f32}, Point2{x: w , y: h});
+        let camera = Camera::new(
+            Point2{x: (board_w / 2 - 10) as f32, y: (board_h / 2 - 10) as f32},
+            Point2{x: w , y: h});
         let img = ImGuiWrapper::new(ctx);
 
         MyGame {
@@ -89,8 +91,8 @@ impl MyGame {
             line_h,
             line_w,
             camera,
-            frame_click_pos: Point2{x: 0.0, y: 0.0},
             is_clicking: false,
+            as_move: false,
             play: false,
             game_step: 0,
             last_refresh: time::Instant::now()
@@ -137,12 +139,12 @@ impl MyGame {
 
     fn update_button(&mut self) {
         match self.img_wrapper.get_last_button() {
-            Some(UiButton::NEXT) => { self.game_step += 1;}
-            Some(UiButton::PREV) => { self.game_step -= 1;}
-            Some(UiButton::STOP) => { self.play = false; }
-            Some(UiButton::PLAY) => { self.play = true; }
-            Some(UiButton::SAVE_MAP) => { self.save_map(); }
-            Some(UiButton::SAVE_INIT_MAP) => { self.save_init_map(); }
+            Some(UiButton::Next) => { self.game_step += 1;}
+            Some(UiButton::Prev) => { self.game_step -= 1;}
+            Some(UiButton::Stop) => { self.play = false; }
+            Some(UiButton::Play) => { self.play = true; }
+            Some(UiButton::SaveMap) => { self.save_map(); }
+            Some(UiButton::SaveInitMap) => { self.save_init_map(); }
             _ => {}
         }
         self.constants.refresh_rate = self.img_wrapper.get_time_per_step();
@@ -200,10 +202,9 @@ impl EventHandler for MyGame {
         self.img_wrapper.update_mouse_down(button);
 
         let (_w, h) = graphics::size(ctx);
-        if y >= h - 100.0 {
-            return
+        if y <= h - 100.0 {
+                self.is_clicking = true;
         }
-        self.is_clicking = true;
     }
 
     fn mouse_button_up_event(
@@ -215,22 +216,22 @@ impl EventHandler for MyGame {
     ) {
         self.img_wrapper.update_mouse_pos(x, y);
         self.img_wrapper.update_mouse_up(button);
-
         let (_w, h) = graphics::size(ctx);
-        if y >= h - 100.0 {
-            return
-        }
-        let  (w, h) = self.camera.board_pos_from_screen_pos((x, y));
 
-        match self.board.get_cell(w as i32, h as i32) {
-            Some(cell) => self.board.set_cell(w as i32, h as i32, cell.status.inverse()),
-            _ => None
-        };
+        if y <= h - 100.0 && !self.as_move {
+            let  (w, h) = self.camera.board_pos_from_screen_pos((x, y));
+
+            if let Some(cell) = self.board.get_cell(w as i32, h as i32) {
+                self.board.set_cell(w as i32, h as i32, cell.status.inverse());
+            }
+        }
+        self.as_move = false;
         self.is_clicking = false;
     }
 
     fn mouse_motion_event(&mut self, ctx: &mut Context, x: f32, y: f32, dx: f32, dy: f32) {
         self.img_wrapper.update_mouse_pos(x, y);
+        self.as_move = true;
         let (_w, h) = graphics::size(ctx);
 
         if self.is_clicking && y <= h - 100.0 {

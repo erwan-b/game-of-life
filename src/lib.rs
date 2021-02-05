@@ -29,12 +29,12 @@ fn run_game(board: Box<Board>) {
     c.window_setup = c.window_setup.title(&"game of life");
     c.window_mode = c.window_mode.resizable(true);
 
-    let (mut ctx, mut event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
+    let (mut ctx, event_loop) = ContextBuilder::new("game_of_life", "Erwan Bernard")
         .default_conf(c)
         .build()
         .expect("aieee, could not create ggez context!");
 
-    let mut my_game = MyGame::new(&mut ctx, board);
+    let my_game = MyGame::new(&mut ctx, board);
 
     // Run!
     event::run(ctx, event_loop, my_game)

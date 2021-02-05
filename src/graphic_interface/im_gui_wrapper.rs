@@ -23,12 +23,12 @@ struct MouseState {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum UiButton {
-    NEXT,
-    PREV,
-    STOP,
-    PLAY,
-    SAVE_MAP,
-    SAVE_INIT_MAP,
+    Next,
+    Prev,
+    Stop,
+    Play,
+    SaveMap,
+    SaveInitMap,
 }
 
 pub struct ImGuiWrapper {
@@ -103,26 +103,26 @@ impl ImGuiWrapper {
                     slider_zoom.build(&ui, &mut zoom_ratio);
                     ui.separator();
                     if ui.button(im_str!("|<"),  [20.0, 20.0]) {
-                        click_button = Some(UiButton::PREV);
+                        click_button = Some(UiButton::Prev);
                     }
                     ui.same_line(32.0);
                     if !play && ui.button(im_str!("|>"),  [20.0, 20.0]) {
-                        click_button = Some(UiButton::PLAY);
+                        click_button = Some(UiButton::Play);
                     }
                     if play && ui.button(im_str!("||"),  [20.0, 20.0]) {
-                        click_button = Some(UiButton::STOP);
+                        click_button = Some(UiButton::Stop);
                     }
                     ui.same_line(54.0);
                     if ui.button(im_str!(">|"),  [20.0, 20.0]) {
-                        click_button = Some(UiButton::NEXT);
+                        click_button = Some(UiButton::Next);
                     }
                     ui.same_line(76.0);
                     if ui.button(im_str!("Save Map"),  [70.0, 20.0]) {
-                        click_button = Some(UiButton::SAVE_MAP);
+                        click_button = Some(UiButton::SaveMap);
                     }
                     ui.same_line(155.0);
                     if ui.button(im_str!("Save init Map"),  [70.0, 20.0]) {
-                        click_button = Some(UiButton::SAVE_INIT_MAP);
+                        click_button = Some(UiButton::SaveInitMap);
                     }
                 });
             self.last_button = click_button;
