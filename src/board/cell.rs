@@ -12,16 +12,16 @@ pub enum STATUS {
 impl STATUS {
     pub fn get_char(self) -> char {
         if STATUS::DEAD == self {
-            '0'
+            '.'
         } else {
-            '1'
+            'O'
         }
     }
 
     pub fn get_from_char(s: char) -> STATUS {
         match s {
-            '0' => STATUS::DEAD,
-            '1' => STATUS::ALIVE,
+            '.' => STATUS::DEAD,
+            'O' => STATUS::ALIVE,
             _other => panic!("Wrong format")
         }
     }

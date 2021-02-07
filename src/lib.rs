@@ -7,7 +7,7 @@ use ggez::{ ContextBuilder, event, conf };
 use board::{Board};
 use graphic_interface::MyGame;
 
-pub const MAP_SIZE: usize = 200;
+pub const MAP_SIZE: usize = 1000;
 
 pub fn create_file_from_map(value: &String, _file_path: &str) {
     fs::write("./map/saved_map.txt", value);

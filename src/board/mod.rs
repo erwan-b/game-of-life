@@ -43,7 +43,7 @@ impl Board {
         }
     }
 
-    fn get_cell_from_char(size: usize, obj_b: Vec<Vec<char>>, (x, y): (i64, i64)) -> Cell {
+    fn get_cell_from_char(size: usize, obj_b: &Vec<Vec<char>>, (x, y): (i64, i64)) -> Cell {
         let res = match Board::get_status_or_dead(
             ((size / 2) - obj_b.len() / 2) as i64 - x,
             ((size / 2) - obj_b.len() / 2) as i64 - y,
@@ -58,11 +58,14 @@ impl Board {
     /// Construct the board from a map
     pub fn new(size: usize, obj: Vec<&str>) -> Self {
         let mut actual = Box::new(HashSet::new());
-        let obj_b: Vec<Vec<char>> = obj.iter().map(|&s| s.chars().collect()).collect();
+        let obj_b: Vec<Vec<char>> = obj.iter()
+            .map(|&s| s.chars().collect::<Vec<char>>())
+            .filter(|elem| elem.get(0) == None || elem.get(0) != Some(&'!'))
+            .collect();
 
         let rows = (0..size as i64).map(|y| {
             (0..size as i64).map(|x| {
-                let c = Self::get_cell_from_char(size, obj_b.clone(), (x, y));
+                let c = Self::get_cell_from_char(size, &obj_b, (x, y));
                 if c.is_alive() {
                     actual.insert(c);
                 }
