@@ -14,7 +14,7 @@ Have a simple program to study and play with the rules of the original game.
 Understand it and create complex, object.
 It should manage a high number of cells at the same time, show and not shown, to manage highly complex patterns.
 
-Ps: This program takes the basic `. cells` file type from the wiki! You can easily test with their files. 
+Ps: This program takes the basic `.cells` file type from the wiki! You can easily test with their files. 
 ### If you find any bug, do not hesitate to open an issue!
 
 ## Run
